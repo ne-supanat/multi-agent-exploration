@@ -59,7 +59,7 @@ class Environment:
         canvas = tk.Canvas(
             window,
             width=self.gridSize[1] * self.cellSize,
-            height=self.gridSize[0] * self.cellSize,
+            height=self.gridSize[0] * self.cellSize + 40,
         )
         return canvas
 
@@ -83,3 +83,7 @@ class Environment:
                     tags="grid",
                 )
                 canvas.tag_lower("grid")
+
+    def getMapSize(self):
+        row, column = self.gridMap.shape
+        return (row * self.cellSize, column * self.cellSize)
