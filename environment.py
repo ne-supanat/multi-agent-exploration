@@ -8,7 +8,7 @@ from constants.gridCellType import GridCellType
 
 
 class Environment:
-
+    # TODO: agents starting points
     def __init__(self, layoutType: LayoutType):
         self.cellSize = 20  # Pixels per grid cell
         self.gridSize = (0, 0)
@@ -41,15 +41,19 @@ class Environment:
         self.gridSize = (15, 20)  # row, column
         self.gridMap = np.zeros(self.gridSize, dtype=int)
 
-        self.gridMap[0:10, 5] = -1
-        self.gridMap[8, 8:14] = -1
-        self.gridMap[4:14, 16] = -1
+        self.gridMap[0:10, 5] = GridCellType.WALL.value
+        self.gridMap[8, 8:14] = GridCellType.WALL.value
+        self.gridMap[4:14, 16] = GridCellType.WALL.value
 
     def createBoundary(self):
-        self.gridMap[0 : self.gridSize[0], 0] = -1
-        self.gridMap[0 : self.gridSize[0], self.gridSize[1] - 1] = -1
-        self.gridMap[0, 0 : self.gridSize[1]] = -1
-        self.gridMap[self.gridSize[0] - 1, 0 : self.gridSize[1]] = -1
+        self.gridMap[0 : self.gridSize[0], 0] = GridCellType.WALL.value
+        self.gridMap[0 : self.gridSize[0], self.gridSize[1] - 1] = (
+            GridCellType.WALL.value
+        )
+        self.gridMap[0, 0 : self.gridSize[1]] = GridCellType.WALL.value
+        self.gridMap[self.gridSize[0] - 1, 0 : self.gridSize[1]] = (
+            GridCellType.WALL.value
+        )
 
     def createCanvas(self, window: tk.Canvas):
         canvas = tk.Canvas(

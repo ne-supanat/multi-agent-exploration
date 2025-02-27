@@ -1,4 +1,4 @@
-from cw.experiment import runOnce
+from experiment import Experiment
 import pandas as pd
 from scipy.stats import ttest_ind
 import matplotlib.pyplot as plt
@@ -11,6 +11,8 @@ from constants.layoutType import LayoutType
 
 # This file is a modification of university of nottingham COMP4105 24-25 module's material
 
+NO_OF_REPS = 3
+
 
 # Run experiment for several times
 # input:
@@ -21,7 +23,8 @@ from constants.layoutType import LayoutType
 def runMultipleExperiments(noOfReps: int, experimentType: ExperimentType):
     results = []
     for _ in range(noOfReps):
-        results.append(runOnce(experimentType, LayoutType.PLAIN))
+        exp = Experiment()
+        results.append(exp.runOnce(experimentType, LayoutType.PLAIN))
     return results
 
 
@@ -37,31 +40,31 @@ def runExperimentsWithDifferentParameters():
 
     # run experiment 10 times for each type
     for experiment in experiments:
-        dirtCollectedList = runMultipleExperiments(10, experiment)
+        dirtCollectedList = runMultipleExperiments(NO_OF_REPS, experiment)
         resultsTable[experiment] = dirtCollectedList
 
-    # ## create exel file from experiment results
-    # # print(resultsTable)
-    # results = pd.DataFrame(resultsTable)
-    # # print(results)
-    # # results.to_excel("cw/experiments.xlsx")
+    ## create exel file from experiment results
+    # print(resultsTable)
+    results = pd.DataFrame(resultsTable)
+    # print(results)
+    # results.to_excel("cw/experiments.xlsx")
 
-    # # Show each experiment type mean
-    # for result in results:
-    #     print(f"{result} mean: {results[result].mean(axis=0)}")
+    # Show each experiment type mean
+    for result in results:
+        print(f"{result} mean: {results[result].mean(axis=0)}")
 
-    # # results.boxplot(grid=False)
-    # # plt.show()
+    # results.boxplot(grid=False)
+    # plt.show()
 
-    # # Conduct statistical test of pair of experiments
-    # # using combinations to create all possible pairs that not repeat it self
-    # # https://www.geeksforgeeks.org/python-all-possible-pairs-in-list/
-    # for pair in list(combinations(experiments, 2)):
-    #     experiment1 = pair[0]
-    #     experiment2 = pair[1]
+    # Conduct statistical test of pair of experiments
+    # using combinations to create all possible pairs that not repeat it self
+    # https://www.geeksforgeeks.org/python-all-possible-pairs-in-list/
+    for pair in list(combinations(experiments, 2)):
+        experiment1 = pair[0]
+        experiment2 = pair[1]
 
-    #     print(f"{experiment1}, {experiment2}:")
-    #     print(f"{ttest_ind(results[experiment1], results[experiment2])}")
+        print(f"{experiment1}, {experiment2}:")
+        print(f"{ttest_ind(results[experiment1], results[experiment2])}")
 
 
 runExperimentsWithDifferentParameters()

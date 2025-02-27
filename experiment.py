@@ -9,15 +9,16 @@ from counter import Counter
 
 from constants.experimentType import ExperimentType
 from constants.layoutType import LayoutType
+from constants.gridCellType import GridCellType
 
 import environment as environment
 
 
 class Experiment:
     def __init__(self):
-        self.tick = 0
-        self.maxTick = 100
+        pass
 
+    # Run experiment 1 time
     def runOnce(self, experimentType: ExperimentType, layoutType: LayoutType):
         window = tk.Tk()
         window.resizable(True, True)
@@ -28,40 +29,44 @@ class Experiment:
         canvas.pack()
         canvas.focus_set()
 
-        agents = self.createAgents(canvas, experimentType, environment.cellSize)
+        # Spawn agents
+        agents = self.createAgents(canvas, 2, experimentType, environment.cellSize)
 
         # Agent always explored starting point
         for agent in agents:
-            environment.gridMap[agent.y, agent.x] = 2
+            environment.gridMap[agent.y, agent.x] = GridCellType.EXPLORED.value
 
         environment.drawGrid(canvas)
 
         counter = Counter()
 
         ticker = Ticker(canvas)
-        self.update(canvas, ticker, counter, environment, agents)
+        self.update(canvas, ticker, counter, environment, agents, window)
 
         window.mainloop()
 
         print(f"Explored: {counter.getExploredCell()}")
         print("- experiment end -")
-        return random.randint(0, 100)
+        return counter.getExploredCell()
 
     def createAgents(
         self,
         canvas: tk.Canvas,
+        noOfAgents: int,
         experimentType: ExperimentType,
         cellSize: int,
     ):
         agents = []
+        pos = [(1, 1), (1, 2)]
 
         # Spawn agents
-        agent = Agent("A1", cellSize=cellSize)
-        agent.setPosition(1, 1)
-        # brain = Brain(bot, expWandering)
-        # bot.setBrain(brain)
-        agents.append(agent)
-        agent.draw(canvas)
+        for i in range(noOfAgents):
+            agent = Agent(f"A{i}", cellSize=cellSize)
+            agent.setPosition(pos[i][0], pos[i][1])
+            # brain = Brain(bot, expWandering)
+            # bot.setBrain(brain)
+            agents.append(agent)
+            agent.draw(canvas)
 
         return agents
 
@@ -72,6 +77,7 @@ class Experiment:
         counter: Counter,
         environment: Environment,
         agents: List[Agent],
+        window: tk.Tk,
     ):
         gridMap = environment.gridMap
 
@@ -79,8 +85,8 @@ class Experiment:
             newX, newY = agent.update(canvas, gridMap)
 
             # Update explored cell on gridMap
-            if gridMap[newY, newX] != 2:
-                gridMap[newY, newX] = 2
+            if gridMap[newY, newX] != GridCellType.EXPLORED.value:
+                gridMap[newY, newX] = GridCellType.EXPLORED.value
                 counter.explored(canvas)
 
             # Update partially explored cell on gridMap
@@ -97,7 +103,7 @@ class Experiment:
         # Update tick
         ticker.nextTick()
         if ticker.isReachMaxTick():
-            canvas.quit()
+            window.destroy()
             return
 
         # update after frame after specific milliseconds
@@ -109,10 +115,11 @@ class Experiment:
             counter,
             environment,
             agents,
+            window,
         )
 
 
 if __name__ == "__main__":
     exp = Experiment()
-    exp.runOnce(ExperimentType.WANDERING, LayoutType.PLAIN)
+    exp.runOnce(ExperimentType.WANDERING, LayoutType.OBSTACLES)
     # exp.runOnce(ExperimentType.WANDERING, LayoutType.OBSTACLES)

@@ -1,13 +1,15 @@
 import random
 import numpy as np
 
+from constants.gridCellType import GridCellType
+
 
 class Agent:
 
     def __init__(self, namep, cellSize):
         self.name = namep
-        self.x = 10  # random.randint(15)
-        self.y = 1  # random.randint(15)
+        self.x = 1
+        self.y = 1
         self.cellSize = cellSize
         self.map = np.zeros((3, 3))
 
@@ -44,13 +46,14 @@ class Agent:
     def move(self, canvas):
         availableMovements = [self.stay]
 
-        if self.map[0][1] != -1:
+        # TODO: not hit other agents
+        if self.map[0][1] != GridCellType.WALL.value:
             availableMovements.append(self.moveUp)
-        if self.map[2][1] != -1:
+        if self.map[2][1] != GridCellType.WALL.value:
             availableMovements.append(self.moveDown)
-        if self.map[1][0] != -1:
+        if self.map[1][0] != GridCellType.WALL.value:
             availableMovements.append(self.moveLeft)
-        if self.map[1][2] != -1:
+        if self.map[1][2] != GridCellType.WALL.value:
             availableMovements.append(self.moveRight)
 
         random.choice(availableMovements)()
