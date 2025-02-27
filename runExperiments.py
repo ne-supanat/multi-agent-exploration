@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from itertools import combinations
 import random
 
-from constants.experimentType import ExperimentType
+from cw.constants.behaviourType import BehaviourType
 from constants.layoutType import LayoutType
 
 
@@ -15,25 +15,21 @@ NO_OF_REPS = 3
 
 
 # Run experiment for several times
-# input:
-#   noOfReps: number of repetitions
-#   experimentType: type of experiment
-# output:
-#   results: list of result of experiment each round
-def runMultipleExperiments(noOfReps: int, experimentType: ExperimentType):
+# noOfReps: number of repetition time
+def runMultipleExperiments(noOfReps: int, behaviourType: BehaviourType):
     results = []
     for _ in range(noOfReps):
         exp = Experiment()
-        results.append(exp.runOnce(experimentType, LayoutType.PLAIN))
+        results.append(exp.runOnce(behaviourType, LayoutType.PLAIN))
     return results
 
 
 # Run all type of experiment for several times
 def runExperimentsWithDifferentParameters():
     experiments = [
-        ExperimentType.WANDERING,
-        ExperimentType.FRONTIER,
-        ExperimentType.REINFORCEMENT,
+        BehaviourType.WANDERING,
+        BehaviourType.FRONTIER,
+        BehaviourType.REINFORCEMENT,
     ]
 
     resultsTable = {}

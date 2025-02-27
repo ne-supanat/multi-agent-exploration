@@ -1,6 +1,6 @@
 class Ticker:
     def __init__(self, canvas):
-        self.maxTick = 150
+        self.maxTick = 0
         self.tick = 0
         self.tickSpeed = 300
 
@@ -24,4 +24,7 @@ class Ticker:
         self.tick += 1
 
     def isReachMaxTick(self):
-        return self.tick >= self.maxTick
+        if self.maxTick > 0:
+            return self.tick >= self.maxTick
+        else:
+            return False
