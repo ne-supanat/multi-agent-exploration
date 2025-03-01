@@ -101,8 +101,8 @@ class Agent:
 
     # What happen at each timestep
     def update(self, canvas, gridMap, agents):
-        for r in range(3):
-            for c in range(3):
+        for r in range(self.vision.shape[0]):
+            for c in range(self.vision.shape[1]):
                 self.vision[r, c] = gridMap[self.y + r - 1, self.x + c - 1]
 
         self.move(canvas, agents)

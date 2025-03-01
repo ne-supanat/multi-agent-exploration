@@ -61,7 +61,7 @@ class Experiment:
         cellSize: int,
     ):
         agents = []
-        pos = [(1, 1), (1, 2)]
+        pos = [(1, 1)]
 
         # Spawn agents
         for i in range(noOfAgents):
@@ -94,10 +94,14 @@ class Experiment:
                 counter.explored(canvas)
 
             # Update partially explored cell on gridMap
-            for r in range(3):
-                for c in range(3):
-                    targetY = newY + r - 1
-                    targetX = newX + c - 1
+            visionShapeRow, visionShapeColumn = (
+                agent.vision.shape[0],
+                agent.vision.shape[1],
+            )
+            for r in range(visionShapeRow):
+                for c in range(visionShapeColumn):
+                    targetY = newY + r - int(visionShapeRow // 2)
+                    targetX = newX + c - int(visionShapeColumn // 2)
 
                     if gridMap[targetY, targetX] == GridCellType.UNEXPLORED.value:
                         gridMap[targetY, targetX] = GridCellType.PARTIAL_EXPLORED.value
@@ -128,4 +132,4 @@ class Experiment:
 if __name__ == "__main__":
     exp = Experiment()
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES)
-    exp.runOnce(BehaviourType.WANDERING, LayoutType.OBSTACLES, noOfAgents=2)
+    exp.runOnce(BehaviourType.WANDERING, LayoutType.PLAIN, noOfAgents=1)
