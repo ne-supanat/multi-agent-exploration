@@ -3,7 +3,7 @@ import random
 from typing import List
 
 from environment import Environment
-from agent import Agent
+from agent import Agent, Brain
 from ticker import Ticker
 from counter import Counter
 
@@ -12,6 +12,9 @@ from constants.layoutType import LayoutType
 from constants.gridCellType import GridCellType
 
 import environment as environment
+
+from brain.brainWandering import BrainWandering
+from brain.brainFrontier import BrainFrontier
 
 
 class Experiment:
@@ -36,9 +39,10 @@ class Experiment:
             canvas, noOfAgents, behaviourType, environment.cellSize
         )
 
-        # Agent always explored starting point
+        # Update grid map for initial stage
+        gridMap = environment.gridMap
         for agent in agents:
-            environment.gridMap[agent.y, agent.x] = GridCellType.EXPLORED.value
+            self.updateGrid(gridMap, agent.x, agent.y, agent)
 
         environment.drawGrid(canvas)
 
@@ -65,10 +69,18 @@ class Experiment:
 
         # Spawn agents
         for i in range(noOfAgents):
-            agent = Agent(f"A{i}", cellSize, behaviourType)
+            agent = Agent(f"A{i}", cellSize)
+
+            if behaviourType == BehaviourType.WANDERING:
+                brain = BrainWandering(agent)
+            elif behaviourType == BehaviourType.FRONTIER:
+                brain = BrainFrontier(agent)
+            else:
+                brain = Brain(agent)
+
+            agent.setBrain(brain)
             agent.setPosition(pos[i % len(pos)][0], pos[i % len(pos)][1])
-            # brain = Brain(bot, expWandering)
-            # bot.setBrain(brain)
+
             agents.append(agent)
             agent.draw(canvas)
 
@@ -88,23 +100,11 @@ class Experiment:
         for agent in agents:
             newX, newY = agent.update(canvas, gridMap, agents)
 
-            # Update explored cell on gridMap
+            # Update explored cell counter
             if gridMap[newY, newX] != GridCellType.EXPLORED.value:
-                gridMap[newY, newX] = GridCellType.EXPLORED.value
                 counter.explored(canvas)
 
-            # Update partially explored cell on gridMap
-            visionShapeRow, visionShapeColumn = (
-                agent.vision.shape[0],
-                agent.vision.shape[1],
-            )
-            for r in range(visionShapeRow):
-                for c in range(visionShapeColumn):
-                    targetY = newY + r - int(visionShapeRow // 2)
-                    targetX = newX + c - int(visionShapeColumn // 2)
-
-                    if gridMap[targetY, targetX] == GridCellType.UNEXPLORED.value:
-                        gridMap[targetY, targetX] = GridCellType.PARTIAL_EXPLORED.value
+            self.updateGrid(gridMap, newX, newY, agent)
 
         environment.drawGrid(canvas)
 
@@ -128,8 +128,27 @@ class Experiment:
             window,
         )
 
+    def updateGrid(self, gridMap, newX, newY, agent):
+        # Update explored cell on gridMap
+        if gridMap[newY, newX] != GridCellType.WALL.value:
+            gridMap[newY, newX] = GridCellType.EXPLORED.value
+
+        # Update partially explored cell on gridMap
+        visionShapeRow, visionShapeColumn = (
+            agent.vision.shape[0],
+            agent.vision.shape[1],
+        )
+        for r in range(visionShapeRow):
+            for c in range(visionShapeColumn):
+                targetY = newY + r - int(visionShapeRow // 2)
+                targetX = newX + c - int(visionShapeColumn // 2)
+
+                if gridMap[targetY, targetX] == GridCellType.UNEXPLORED.value:
+                    gridMap[targetY, targetX] = GridCellType.PARTIAL_EXPLORED.value
+
 
 if __name__ == "__main__":
     exp = Experiment()
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES)
-    exp.runOnce(BehaviourType.WANDERING, LayoutType.PLAIN, noOfAgents=1)
+    # exp.runOnce(BehaviourType.FRONTIER, LayoutType.PLAIN, noOfAgents=1)
+    exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=1)
