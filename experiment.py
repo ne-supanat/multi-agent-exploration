@@ -65,7 +65,7 @@ class Experiment:
         cellSize: int,
     ):
         agents = []
-        pos = [(1, 1)]
+        pos = [(3, 3)]
 
         # Spawn agents
         for i in range(noOfAgents):
@@ -150,5 +150,5 @@ class Experiment:
 if __name__ == "__main__":
     exp = Experiment()
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES)
-    # exp.runOnce(BehaviourType.FRONTIER, LayoutType.PLAIN, noOfAgents=1)
-    exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=1)
+    exp.runOnce(BehaviourType.FRONTIER, LayoutType.PLAIN, noOfAgents=1)
+    # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=1)

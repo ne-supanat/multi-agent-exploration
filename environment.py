@@ -10,7 +10,7 @@ from constants.gridCellType import GridCellType
 class Environment:
     # TODO: agents starting points
     def __init__(self, layoutType: LayoutType):
-        self.cellSize = 10  # Pixels per grid cell
+        self.cellSize = 20  # Pixels per grid cell
         self.gridSize = (0, 0)
         self.gridMap = np.zeros((0, 0), dtype=int)
 
@@ -34,7 +34,7 @@ class Environment:
         return layout
 
     def setupLayoutPlain(self):
-        self.gridSize = (30, 30)  # row, column
+        self.gridSize = (10, 10)  # row, column
         self.gridMap = np.zeros(self.gridSize, dtype=int)
 
     def setupLayoutObstacles(self):

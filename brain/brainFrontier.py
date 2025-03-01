@@ -10,7 +10,9 @@ from brain.brain import Brain
 class BrainFrontier(Brain):
     def __init__(self, agentp, centralMap=None):
         self.agent = agentp
-        self.localMap = centralMap if centralMap != None else agentp.vision
+        self.localX = 1
+        self.localY = 1
+        self.localMap = centralMap if centralMap != None else agentp.vision.copy()
         self.frontiers = []
         self.queue = []
         # self.path = aStarSearch(self.map)
@@ -22,22 +24,34 @@ class BrainFrontier(Brain):
         self.gainInfoFromVision(vision)
         availableMoves = self.checkAvailableMoves(vision, agents)
 
-        print((self.agent.x, self.agent.y))
+        print(self.localMap)
 
-        if (self.agent.x, self.agent.y) in self.frontiers:
-            self.frontiers.remove((self.agent.x, self.agent.y))
+        if (self.localX, self.localY) in self.frontiers:
+            self.frontiers.remove((self.localX, self.localY))
+
+        # If there is no move in queue
+        # find the closest partially explored cell, add sequence of move toward it in queue
+        if len(self.queue) == 0:
+            self.thinkBehavior(availableMoves)
 
         # If there is/are move(s) in queue do it first
         if len(self.queue) > 0:
-            return self.queue.pop(0)
-        # If there is no move in queue
-        # find the closest partially explored cell, add sequence of move toward it in queue
-        elif len(self.queue) == 0:
-            self.thinkBehavior(availableMoves)
-            return self.queue.pop(0)
-        # All cell should already be explored
+            bestMove = self.queue.pop(0)
         else:
-            return MoveType.STAY
+            bestMove = MoveType.STAY
+
+        self.updateLocalPostion(bestMove)
+        return bestMove
+
+    def updateLocalPostion(self, moveType: MoveType):
+        if moveType == MoveType.UP:
+            self.localY -= 1
+        elif moveType == MoveType.DOWN:
+            self.localY += 1
+        elif moveType == MoveType.LEFT:
+            self.localX -= 1
+        elif moveType == MoveType.RIGHT:
+            self.localX += 1
 
     # Update shape of local map
     def updateLocalMapSize(self, vision):
@@ -45,25 +59,38 @@ class BrainFrontier(Brain):
         horizontalRadius = int(visionShapeRow // 2)
         verticalRadius = int(visionShapeColumn // 2)
 
-        localMapShapeRow, localMapShapeColumn = (
-            self.localMap.shape[0],
-            self.localMap.shape[1],
-        )
-
         # Add new column(s)
-        if self.agent.x + horizontalRadius >= localMapShapeColumn:
-            self.localMap = np.append(
-                self.localMap,
-                np.zeros((localMapShapeRow, 1)),
-                axis=1,
+        if self.localX - horizontalRadius < 0:
+            self.localMap = np.hstack(
+                (np.zeros((self.localMap.shape[0], horizontalRadius)), self.localMap)
+            )
+            self.localX += 1  # compensate x postion due to new added column
+            self.frontiers = [
+                (frontier[0] + 1, frontier[1]) for frontier in self.frontiers
+            ]
+
+            print("add column before")
+            print(self.localMap)
+        if self.localX + horizontalRadius >= self.localMap.shape[1]:
+            self.localMap = np.hstack(
+                (self.localMap, np.zeros((self.localMap.shape[0], horizontalRadius)))
             )
 
         # Add new row(s)
-        if self.agent.y + verticalRadius >= localMapShapeRow:
-            self.localMap = np.append(
-                self.localMap,
-                np.zeros((1, localMapShapeColumn)),
-                axis=0,
+        if self.localY - verticalRadius < 0:
+            self.localMap = np.vstack(
+                (np.zeros((horizontalRadius, self.localMap.shape[1])), self.localMap)
+            )
+            self.localY += 1  # compensate y postion due to new added row
+            self.frontiers = [
+                (frontier[0], frontier[1] + 1) for frontier in self.frontiers
+            ]
+
+            print("add row before")
+            print(self.localMap)
+        if self.localY + verticalRadius >= self.localMap.shape[0]:
+            self.localMap = np.vstack(
+                (self.localMap, np.zeros((horizontalRadius, self.localMap.shape[1])))
             )
 
     def gainInfoFromVision(self, vision):
@@ -71,8 +98,8 @@ class BrainFrontier(Brain):
         visionShapeRow, visionShapeColumn = vision.shape[0], vision.shape[1]
         for r in range(visionShapeRow):
             for c in range(visionShapeColumn):
-                targetY = self.agent.y + r - int(visionShapeRow // 2)
-                targetX = self.agent.x + c - int(visionShapeColumn // 2)
+                targetY = self.localY + r - int(visionShapeRow // 2)
+                targetX = self.localX + c - int(visionShapeColumn // 2)
 
                 self.updateLocalMapValue(targetX, targetY, vision[r][c])
                 self.updateFronteir(targetX, targetY, vision[r][c])
@@ -95,13 +122,13 @@ class BrainFrontier(Brain):
         if len(self.frontiers) > 0:
             targetX, targetY = self.frontiers[0]
 
-            if targetY < self.agent.y and MoveType.UP in availableMoves:
+            if targetY < self.localY and MoveType.UP in availableMoves:
                 self.queue.append(MoveType.UP)
-            if targetY > self.agent.y and MoveType.DOWN in availableMoves:
+            if targetY > self.localY and MoveType.DOWN in availableMoves:
                 self.queue.append(MoveType.DOWN)
-            if targetX < self.agent.x and MoveType.LEFT in availableMoves:
+            if targetX < self.localX and MoveType.LEFT in availableMoves:
                 self.queue.append(MoveType.LEFT)
-            if targetX > self.agent.x and MoveType.RIGHT in availableMoves:
+            if targetX > self.localX and MoveType.RIGHT in availableMoves:
                 self.queue.append(MoveType.RIGHT)
         else:
             self.queue.append(MoveType.STAY)
