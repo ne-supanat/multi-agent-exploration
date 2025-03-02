@@ -5,15 +5,17 @@ from constants.moveType import MoveType
 from constants.gridCellType import GridCellType
 
 from brain.brain import Brain
+from centralMap import CentralMap
 
 
+# TODO: update frontier list from local map instead
 class BrainFrontier(Brain):
-    def __init__(self, agentp, centralMap=None):
+    def __init__(self, agentp, centralMap: CentralMap = None):
         self.agent = agentp
-        self.localX = 1
-        self.localY = 1
-        self.localMap = centralMap if centralMap != None else agentp.vision.copy()
-        self.frontiers = []
+        self.localX = agentp.x
+        self.localY = agentp.y
+        self.localMap = centralMap if not centralMap is None else agentp.vision.copy()
+        self.targetCell = None
         self.queue = []
         # self.path = aStarSearch(self.map)
         # print(self.path)
@@ -24,15 +26,19 @@ class BrainFrontier(Brain):
         self.gainInfoFromVision(vision)
         availableMoves = self.checkAvailableMoves(vision, agents)
 
-        print(self.localMap)
+        print(self.localMap.map)
 
-        if (self.localX, self.localY) in self.frontiers:
-            self.frontiers.remove((self.localX, self.localY))
+        # TODO: add document comment
+        if (self.localX, self.localY) == self.targetCell or (
+            not self.targetCell in self.localMap.frontiers
+        ):
+            self.targetCell = None
+            self.findNewTargetCell()
 
-        # If there is no move in queue
-        # find the closest partially explored cell, add sequence of move toward it in queue
-        if len(self.queue) == 0:
-            self.thinkBehavior(availableMoves)
+        if not self.queue or (
+            len(self.queue) > 0 and not self.queue[0] in availableMoves
+        ):
+            self.planPath()
 
         # If there is/are move(s) in queue do it first
         if len(self.queue) > 0:
@@ -40,8 +46,15 @@ class BrainFrontier(Brain):
         else:
             bestMove = MoveType.STAY
 
-        self.updateLocalPostion(bestMove)
-        return bestMove
+        if bestMove in availableMoves:
+            self.updateLocalPostion(bestMove)
+
+            if (self.localX, self.localY) in self.localMap.frontiers:
+                self.localMap.removeFrontierPos((self.localX, self.localY))
+
+            return bestMove
+        else:
+            return MoveType.STAY
 
     def updateLocalPostion(self, moveType: MoveType):
         if moveType == MoveType.UP:
@@ -61,74 +74,77 @@ class BrainFrontier(Brain):
 
         # Add new column(s)
         if self.localX - horizontalRadius < 0:
-            self.localMap = np.hstack(
-                (np.zeros((self.localMap.shape[0], horizontalRadius)), self.localMap)
-            )
+            self.localMap.addColumnLeft(horizontalRadius)
             self.localX += 1  # compensate x postion due to new added column
-            self.frontiers = [
-                (frontier[0] + 1, frontier[1]) for frontier in self.frontiers
+            self.localMap.frontiers = [
+                (frontier[0] + 1, frontier[1]) for frontier in self.localMap.frontiers
             ]
 
-            print("add column before")
-            print(self.localMap)
-        if self.localX + horizontalRadius >= self.localMap.shape[1]:
-            self.localMap = np.hstack(
-                (self.localMap, np.zeros((self.localMap.shape[0], horizontalRadius)))
-            )
+            print("add column left")
+            print(self.localMap.map)
+        if self.localX + horizontalRadius >= self.localMap.map.shape[1]:
+            self.localMap.addColumnRight(horizontalRadius)
 
         # Add new row(s)
         if self.localY - verticalRadius < 0:
-            self.localMap = np.vstack(
-                (np.zeros((horizontalRadius, self.localMap.shape[1])), self.localMap)
-            )
+            self.localMap.addRowAbove(verticalRadius)
             self.localY += 1  # compensate y postion due to new added row
-            self.frontiers = [
-                (frontier[0], frontier[1] + 1) for frontier in self.frontiers
+            self.localMap.frontiers = [
+                (frontier[0], frontier[1] + 1) for frontier in self.localMap.frontiers
             ]
 
-            print("add row before")
-            print(self.localMap)
-        if self.localY + verticalRadius >= self.localMap.shape[0]:
-            self.localMap = np.vstack(
-                (self.localMap, np.zeros((horizontalRadius, self.localMap.shape[1])))
-            )
+            print("add row above")
+            print(self.localMap.map)
+        if self.localY + verticalRadius >= self.localMap.map.shape[0]:
+            self.localMap.addRowBelow(verticalRadius)
+            print("add row below")
+            print(self.localMap.map)
 
     def gainInfoFromVision(self, vision):
         # Update local map with value from vision
         visionShapeRow, visionShapeColumn = vision.shape[0], vision.shape[1]
         for r in range(visionShapeRow):
             for c in range(visionShapeColumn):
-                targetY = self.localY + r - int(visionShapeRow // 2)
-                targetX = self.localX + c - int(visionShapeColumn // 2)
+                targetRow = self.localY + r - int(visionShapeRow // 2)
+                targetColumn = self.localX + c - int(visionShapeColumn // 2)
 
-                self.updateLocalMapValue(targetX, targetY, vision[r][c])
-                self.updateFronteir(targetX, targetY, vision[r][c])
+                self.updateLocalMapValue(targetColumn, targetRow, vision[r][c])
+                self.updateFronteir(targetColumn, targetRow, vision[r][c])
 
-    def updateLocalMapValue(self, x, y, value):
-        self.localMap[y, x] = value
+    def updateLocalMapValue(self, column, row, value):
+        self.localMap.updateValueAt(column, row, value)
 
-    def updateFronteir(self, x, y, value):
+    def updateFronteir(self, column, row, value):
         if value == GridCellType.PARTIAL_EXPLORED.value and (
-            not (x, y) in self.frontiers
+            not (column, row) in self.localMap.frontiers
         ):
-            self.frontiers.append((x, y))
+            self.localMap.addFrontierPos((column, row))
 
-    # Frontier behavior thinking: move to cloest partially explored cell
-    def thinkBehavior(self, availableMoves) -> MoveType:
+    def findNewTargetCell(self):
+        if len(self.localMap.frontiers) > 0:
+            for fronteir in self.localMap.frontiers:
+                if not fronteir in self.localMap.blackboard:
+                    self.targetCell = fronteir
+                    self.planPath()
+                    break
+
+            self.localMap.blackboard[self.targetCell] = self.agent.name
+
+    def planPath(self):
+        self.queue.clear()
+
+        # If no place assigned then stay
+        if self.targetCell is None:
+            return MoveType.STAY
+
         # TODO: implement A* path
-        # for cell in self.frontiers:
-        #   astar to closest partially explored cell
+        targetX, targetY = self.targetCell
 
-        if len(self.frontiers) > 0:
-            targetX, targetY = self.frontiers[0]
-
-            if targetY < self.localY and MoveType.UP in availableMoves:
-                self.queue.append(MoveType.UP)
-            if targetY > self.localY and MoveType.DOWN in availableMoves:
-                self.queue.append(MoveType.DOWN)
-            if targetX < self.localX and MoveType.LEFT in availableMoves:
-                self.queue.append(MoveType.LEFT)
-            if targetX > self.localX and MoveType.RIGHT in availableMoves:
-                self.queue.append(MoveType.RIGHT)
-        else:
-            self.queue.append(MoveType.STAY)
+        if targetY < self.localY:
+            self.queue.append(MoveType.UP)
+        if targetY > self.localY:
+            self.queue.append(MoveType.DOWN)
+        if targetX < self.localX:
+            self.queue.append(MoveType.LEFT)
+        if targetX > self.localX:
+            self.queue.append(MoveType.RIGHT)

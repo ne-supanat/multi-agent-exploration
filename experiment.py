@@ -1,11 +1,11 @@
 import tkinter as tk
-import random
 from typing import List
 
 from environment import Environment
 from agent import Agent, Brain
 from ticker import Ticker
 from counter import Counter
+from centralMap import CentralMap
 
 from constants.behaviourType import BehaviourType
 from constants.layoutType import LayoutType
@@ -65,21 +65,23 @@ class Experiment:
         cellSize: int,
     ):
         agents = []
-        pos = [(3, 3)]
+        pos = [(1, 1), (1, 2), (1, 3), (1, 4)]  # x, y
+
+        maxRow, maxColumn = map(max, zip(*pos))
+        centralMap = CentralMap(maxColumn + 1, maxRow + 1)
 
         # Spawn agents
         for i in range(noOfAgents):
             agent = Agent(f"A{i}", cellSize)
+            agent.setPosition(pos[i % len(pos)][0], pos[i % len(pos)][1])
 
             if behaviourType == BehaviourType.WANDERING:
                 brain = BrainWandering(agent)
             elif behaviourType == BehaviourType.FRONTIER:
-                brain = BrainFrontier(agent)
+                brain = BrainFrontier(agent, centralMap)
             else:
                 brain = Brain(agent)
-
             agent.setBrain(brain)
-            agent.setPosition(pos[i % len(pos)][0], pos[i % len(pos)][1])
 
             agents.append(agent)
             agent.draw(canvas)
@@ -150,5 +152,5 @@ class Experiment:
 if __name__ == "__main__":
     exp = Experiment()
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES)
-    exp.runOnce(BehaviourType.FRONTIER, LayoutType.PLAIN, noOfAgents=1)
+    exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=4)
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=1)

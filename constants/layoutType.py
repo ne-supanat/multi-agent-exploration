@@ -2,6 +2,7 @@ from enum import Enum
 
 
 class LayoutType(Enum):
+    TEST = 0
     PLAIN = 1
     OBSTACLES = 2
     MAZE = 3

@@ -12,7 +12,6 @@ class Agent:
         self.y = 1
         self.cellSize = cellSize
         self.vision = np.zeros((3, 3))  # simulate limited vision only 1 cell around
-        self.map = np.zeros((15, 15))
 
     def setBrain(self, brainp: Brain):
         self.brain = brainp

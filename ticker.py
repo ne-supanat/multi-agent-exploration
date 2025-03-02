@@ -2,7 +2,7 @@ class Ticker:
     def __init__(self, canvas):
         self.maxTick = 0
         self.tick = 0
-        self.tickSpeed = 300
+        self.tickSpeed = 50
 
         canvas.bind("<space>", lambda event: self.changeTickSpeed())
         canvas.bind("<Button-1>", lambda event: self.changeTickSpeed())

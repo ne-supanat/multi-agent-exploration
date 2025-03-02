@@ -18,6 +18,8 @@ class Environment:
 
     def setupLayout(self, layoutType) -> np.ndarray:
         layout = None
+        if layoutType == LayoutType.TEST:
+            layout = self.setupLayoutTest()
         if layoutType == LayoutType.PLAIN:
             layout = self.setupLayoutPlain()
         elif layoutType == LayoutType.OBSTACLES:
@@ -33,8 +35,12 @@ class Environment:
         self.createBoundary()
         return layout
 
-    def setupLayoutPlain(self):
+    def setupLayoutTest(self):
         self.gridSize = (10, 10)  # row, column
+        self.gridMap = np.zeros(self.gridSize, dtype=int)
+
+    def setupLayoutPlain(self):
+        self.gridSize = (30, 30)  # row, column
         self.gridMap = np.zeros(self.gridSize, dtype=int)
 
     def setupLayoutObstacles(self):
