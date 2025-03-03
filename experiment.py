@@ -14,6 +14,7 @@ from constants.gridCellType import GridCellType
 import environment as environment
 
 from brain.brainWandering import BrainWandering
+from brain.brainGreedy import BrainGreedy
 from brain.brainFrontier import BrainFrontier
 
 
@@ -66,7 +67,7 @@ class Experiment:
     ):
         agents = []
         # pos = [(1, 1), (1, 2), (1, 3), (1, 4)]  # row, column
-        pos = [(1, 1)]  # row, column
+        pos = [(1, 1), (1, 2), (2, 1)]  # row, column
 
         maxRow, maxColumn = map(max, zip(*pos))
         centralMap = CentralMap(maxColumn + 1, maxRow + 1)
@@ -79,6 +80,8 @@ class Experiment:
 
             if behaviourType == BehaviourType.WANDERING:
                 brain = BrainWandering(agent)
+            elif behaviourType == BehaviourType.GREEDY:
+                brain = BrainGreedy(agent)
             elif behaviourType == BehaviourType.FRONTIER:
                 brain = BrainFrontier(agent, centralMap)
             else:
@@ -154,5 +157,5 @@ class Experiment:
 if __name__ == "__main__":
     exp = Experiment()
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES)
-    print(exp.runOnce(BehaviourType.FRONTIER, LayoutType.TEST, noOfAgents=4))
+    print(exp.runOnce(BehaviourType.FRONTIER, LayoutType.TEST, noOfAgents=3))
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=1)
