@@ -18,6 +18,7 @@ class BrainFrontier(Brain):
         self.localMap = centralMap if not centralMap is None else agentp.vision.copy()
         self.targetCell = None
         self.queue = []
+        self.stuck = 0
 
     # Decide what should be the next move
     def thinkAndAct(self, vision, agents: list) -> MoveType:
@@ -25,7 +26,7 @@ class BrainFrontier(Brain):
         self.gainInfoFromVision(vision)
         availableMoves = self.checkAvailableMoves(vision, agents)
 
-        print(self.localMap.map)
+        # print(self.localMap.map)
 
         # Find new target cell
         # if agent on target cell position or
@@ -36,19 +37,23 @@ class BrainFrontier(Brain):
             self.targetCell = None
             self.findNewTargetCell()
 
-        # Planing path for new target
-        if not self.queue:
+        # if stuck for too long (3 turns) give up on task
+        if self.targetCell and self.stuck > 2:
+            self.localMap.giveUpOnTask(self.targetCell)
+            return MoveType.STAY
+
+        # Planing path for new target or stuck try find new path
+        if not self.queue or self.stuck > 0:
             self.planNewPath()
 
         if self.queue:
-            # Move following sequence in queue
+            # Move following sequence in queue if possible
             if self.queue[0] in availableMoves:
                 bestMove = self.queue.pop(0)
             else:
-                # Planning new path if something block that direction
-                # and move following new path
-                self.planNewPath()
-                bestMove = self.queue.pop(0)
+                # If not movable then update stuck count
+                self.stuck += 1
+                bestMove = MoveType.STAY
         else:
             bestMove = MoveType.STAY
 

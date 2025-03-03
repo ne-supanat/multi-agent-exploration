@@ -36,7 +36,7 @@ class Environment:
         return layout
 
     def setupLayoutTest(self):
-        self.gridSize = (5, 10)  # row, column
+        self.gridSize = (4, 4)  # row, column
         self.gridMap = np.full(self.gridSize, GridCellType.UNEXPLORED.value, dtype=int)
 
         # self.gridMap[1, 1:8] = GridCellType.EXPLORED.value
@@ -98,4 +98,8 @@ class Environment:
         return (row * self.cellSize, column * self.cellSize)
 
     def isFullyExplored(self):
-        return np.all(np.isin(self.gridMap, [-1, 2]))
+        return np.all(
+            np.isin(
+                self.gridMap, [GridCellType.WALL.value, GridCellType.EXPLORED.value]
+            )
+        )

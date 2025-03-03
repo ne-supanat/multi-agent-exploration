@@ -8,7 +8,7 @@ class CentralMap:
             (sizeRow, sizeColumn), GridCellType.UNEXPLORED.value, dtype=int
         )
         self.frontiers = []
-        self.blackboard = {}
+        self.blackboard = {}  # in format of (cell_row, cell_column): agent_name
 
     def addRowAbove(self, noOfRows):
         self.map = np.vstack(
@@ -66,3 +66,6 @@ class CentralMap:
 
     def removeFrontier(self, pos):
         self.frontiers.remove(pos)
+
+    def giveUpOnTask(self, targetCell):
+        self.blackboard.pop(targetCell)

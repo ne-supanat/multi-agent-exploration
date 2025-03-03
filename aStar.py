@@ -41,7 +41,7 @@ def calculate_h_value(row, col, dest):
 
 # Trace the path from source to destination
 def trace_path(cell_details, dest):
-    print("The Path is ")
+    # print("The Path is ")
     path = []
     row = dest[0]
     col = dest[1]
@@ -62,10 +62,10 @@ def trace_path(cell_details, dest):
     # Reverse the path to get the path from source to destination
     path.reverse()
 
-    # Print the path
-    for i in path:
-        print("->", i, end=" ")
-    print()
+    ## Print the path
+    # for i in path:
+    #     print("->", i, end=" ")
+    # print()
 
     return path
 
@@ -77,19 +77,19 @@ def aStarSearch(grid, src, dest):
     if not is_valid(src[0], src[1], ROW, COL) or not is_valid(
         dest[0], dest[1], ROW, COL
     ):
-        print("Source or destination is invalid")
+        # print("Source or destination is invalid")
         return
 
     # Check if the source and destination are unblocked
     if not is_unblocked(grid, src[0], src[1]) or not is_unblocked(
         grid, dest[0], dest[1]
     ):
-        print("Source or the destination is blocked")
+        # print("Source or the destination is blocked")
         return
 
     # Check if we are already at the destination
     if is_destination(src[0], src[1], dest):
-        print("We are already at the destination")
+        # print("We are already at the destination")
         return
 
     # Initialize the closed list (visited cells)
@@ -149,7 +149,7 @@ def aStarSearch(grid, src, dest):
                     # Set the parent of the destination cell
                     cell_details[new_i][new_j].parent_i = i
                     cell_details[new_i][new_j].parent_j = j
-                    print("The destination cell is found")
+                    # print("The destination cell is found")
                     # Trace and print the path from source to destination
                     path = trace_path(cell_details, dest)
                     found_dest = True
@@ -178,4 +178,5 @@ def aStarSearch(grid, src, dest):
 
     # If the destination is not found after visiting all cells
     if not found_dest:
-        print("Failed to find the destination cell")
+        # print("Failed to find the destination cell")
+        pass
