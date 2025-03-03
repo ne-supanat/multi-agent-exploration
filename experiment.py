@@ -65,10 +65,12 @@ class Experiment:
         cellSize: int,
     ):
         agents = []
-        pos = [(1, 1), (1, 2), (1, 3), (1, 4)]  # x, y
+        # pos = [(1, 1), (1, 2), (1, 3), (1, 4)]  # x, y
+        pos = [(1, 1)]  # x, y
 
         maxRow, maxColumn = map(max, zip(*pos))
         centralMap = CentralMap(maxColumn + 1, maxRow + 1)
+        # centralMap = CentralMap(10, 10)
 
         # Spawn agents
         for i in range(noOfAgents):
@@ -114,7 +116,7 @@ class Experiment:
 
         # Update tick
         ticker.nextTick()
-        if ticker.isReachMaxTick():
+        if ticker.isReachMaxTick() or environment.isFullyExplored():
             window.destroy()
             return
 
@@ -152,5 +154,5 @@ class Experiment:
 if __name__ == "__main__":
     exp = Experiment()
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES)
-    exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=4)
+    print(exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=4))
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=1)

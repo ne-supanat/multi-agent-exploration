@@ -93,3 +93,6 @@ class Environment:
     def getMapSize(self):
         row, column = self.gridMap.shape
         return (row * self.cellSize, column * self.cellSize)
+
+    def isFullyExplored(self):
+        return np.all(np.isin(self.gridMap, [-1, 2]))
