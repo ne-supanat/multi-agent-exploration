@@ -12,7 +12,7 @@ class Environment:
     def __init__(self, layoutType: LayoutType):
         self.cellSize = 20  # Pixels per grid cell
         self.gridSize = (0, 0)
-        self.gridMap = np.zeros((0, 0), dtype=int)
+        self.gridMap = np.full((0, 0), GridCellType.UNEXPLORED.value, dtype=int)
 
         self.setupLayout(layoutType)
 
@@ -36,16 +36,19 @@ class Environment:
         return layout
 
     def setupLayoutTest(self):
-        self.gridSize = (10, 10)  # row, column
-        self.gridMap = np.zeros(self.gridSize, dtype=int)
+        self.gridSize = (5, 10)  # row, column
+        self.gridMap = np.full(self.gridSize, GridCellType.UNEXPLORED.value, dtype=int)
+
+        # self.gridMap[1, 1:8] = GridCellType.EXPLORED.value
+        # self.gridMap[2, 1:9] = GridCellType.PARTIAL_EXPLORED.value
 
     def setupLayoutPlain(self):
         self.gridSize = (30, 30)  # row, column
-        self.gridMap = np.zeros(self.gridSize, dtype=int)
+        self.gridMap = np.full(self.gridSize, GridCellType.UNEXPLORED.value, dtype=int)
 
     def setupLayoutObstacles(self):
         self.gridSize = (30, 30)  # row, column
-        self.gridMap = np.zeros(self.gridSize, dtype=int)
+        self.gridMap = np.full(self.gridSize, GridCellType.UNEXPLORED.value, dtype=int)
 
         self.gridMap[0:10, 10] = GridCellType.WALL.value
         self.gridMap[16, 5:16] = GridCellType.WALL.value

@@ -42,7 +42,7 @@ class Experiment:
         # Update grid map for initial stage
         gridMap = environment.gridMap
         for agent in agents:
-            self.updateGrid(gridMap, agent.x, agent.y, agent)
+            self.updateGrid(gridMap, agent.column, agent.row, agent)
 
         environment.drawGrid(canvas)
 
@@ -65,8 +65,8 @@ class Experiment:
         cellSize: int,
     ):
         agents = []
-        # pos = [(1, 1), (1, 2), (1, 3), (1, 4)]  # x, y
-        pos = [(1, 1)]  # x, y
+        # pos = [(1, 1), (1, 2), (1, 3), (1, 4)]  # row, column
+        pos = [(1, 1)]  # row, column
 
         maxRow, maxColumn = map(max, zip(*pos))
         centralMap = CentralMap(maxColumn + 1, maxRow + 1)
@@ -154,5 +154,5 @@ class Experiment:
 if __name__ == "__main__":
     exp = Experiment()
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES)
-    print(exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=4))
+    print(exp.runOnce(BehaviourType.FRONTIER, LayoutType.TEST, noOfAgents=4))
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=1)

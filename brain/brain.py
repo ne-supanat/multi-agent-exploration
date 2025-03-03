@@ -42,16 +42,16 @@ class Brain:
             if agent.name == self.agent:
                 continue
 
-            if agent.x == self.agent.x:
-                if agent.y == self.agent.y - 1:  # check top postition
+            if agent.column == self.agent.column:
+                if agent.row == self.agent.row - 1:  # check top postition
                     availableMoves.discard(MoveType.UP)
-                elif agent.y == self.agent.y + 1:  # check bottom postition
+                elif agent.row == self.agent.row + 1:  # check bottom postition
                     availableMoves.discard(MoveType.DOWN)
-            elif agent.y == self.agent.y:
-                if agent.x == self.agent.x - 1:  # check left postition
+            elif agent.row == self.agent.row:
+                if agent.column == self.agent.column - 1:  # check left postition
                     availableMoves.discard(MoveType.LEFT)
 
-                elif agent.x == self.agent.x + 1:  # check right postition
+                elif agent.column == self.agent.column + 1:  # check right postition
                     availableMoves.discard(MoveType.RIGHT)
 
         return availableMoves

@@ -2,10 +2,11 @@ import math
 import heapq
 from constants.gridCellType import GridCellType
 
-# a modification of the a* algorithm from
+# A modification of the a* algorithm from Geek for geeks
 # https://www.geeksforgeeks.org/a-search-algorithm/
 
-# TODO: add score to cell type: it should priori want to go to unexplored
+# Modifications:
+# - consider value of grid cell type when calculate value f (line 162)
 
 
 # Define the Cell class
@@ -18,14 +19,8 @@ class Cell:
         self.h = 0  # Heuristic cost from this cell to destination
 
 
-# # Define the size of the grid
-# ROW = 10
-# COL = 10
-
-
 # Check if a cell is valid (within the grid)
 def is_valid(row, col, ROW, COL):
-    # return True
     return (row >= 0) and (row < ROW) and (col >= 0) and (col < COL)
 
 
@@ -76,7 +71,7 @@ def trace_path(cell_details, dest):
 
 
 # Implement the A* search algorithm
-def a_star_search(grid, src, dest):
+def aStarSearch(grid, src, dest):
     ROW, COL = grid.shape
     # # Check if the source and destination are valid
     if not is_valid(src[0], src[1], ROW, COL) or not is_valid(
@@ -163,7 +158,9 @@ def a_star_search(grid, src, dest):
                     # Calculate the new f, g, and h values
                     g_new = cell_details[i][j].g + 1.0
                     h_new = calculate_h_value(new_i, new_j, dest)
-                    f_new = g_new + h_new
+                    f_new = (
+                        g_new + h_new - grid[new_i][new_j]
+                    )  # deduct by cell value make it prefer UNEXPLORED(2) and PARTIAL_EXPLORED(1) more
 
                     # If the cell is not in the open list or the new f value is smaller
                     if (

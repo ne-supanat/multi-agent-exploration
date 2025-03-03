@@ -8,23 +8,23 @@ from brain.brain import Brain
 class Agent:
     def __init__(self, name, cellSize):
         self.name = name
-        self.x = 1
-        self.y = 1
+        self.row = 1
+        self.column = 1
         self.cellSize = cellSize
         self.vision = np.zeros((3, 3))  # simulate limited vision only 1 cell around
 
     def setBrain(self, brainp: Brain):
         self.brain = brainp
 
-    def setPosition(self, x, y):
-        self.x = x
-        self.y = y
+    def setPosition(self, row, column):
+        self.row = row
+        self.column = column
 
     # draws the agent at its current position
     def draw(self, canvas):
         radius = self.cellSize / 2
-        centerX = (self.x * self.cellSize) + radius
-        centerY = (self.y * self.cellSize) + radius
+        centerX = (self.column * self.cellSize) + radius
+        centerY = (self.row * self.cellSize) + radius
         canvas.create_oval(
             centerX - radius,
             centerY - radius,
@@ -39,11 +39,11 @@ class Agent:
     def update(self, canvas, gridMap, agents):
         for r in range(self.vision.shape[0]):
             for c in range(self.vision.shape[1]):
-                self.vision[r, c] = gridMap[self.y + r - 1, self.x + c - 1]
+                self.vision[r, c] = gridMap[self.row + r - 1, self.column + c - 1]
 
         self.move(canvas, agents)
 
-        return self.x, self.y
+        return self.column, self.row
 
     # Handle movement
     def move(self, canvas, agents):
@@ -67,17 +67,17 @@ class Agent:
         return
 
     def moveUp(self):
-        self.y -= 1
+        self.row -= 1
         return
 
     def moveDown(self):
-        self.y += 1
+        self.row += 1
         return
 
     def moveRight(self):
-        self.x += 1
+        self.column += 1
         return
 
     def moveLeft(self):
-        self.x -= 1
+        self.column -= 1
         return
