@@ -157,5 +157,5 @@ class Experiment:
 if __name__ == "__main__":
     exp = Experiment()
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES)
-    print(exp.runOnce(BehaviourType.FRONTIER, LayoutType.TEST, noOfAgents=3))
+    print(exp.runOnce(BehaviourType.GREEDY, LayoutType.OBSTACLES, noOfAgents=3))
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=1)

@@ -68,4 +68,5 @@ class CentralMap:
         self.frontiers.remove(pos)
 
     def giveUpOnTask(self, targetCell):
-        self.blackboard.pop(targetCell)
+        if targetCell in self.blackboard:
+            self.blackboard.pop(targetCell)
