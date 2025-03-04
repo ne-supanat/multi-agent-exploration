@@ -5,7 +5,7 @@ from constants.moveType import MoveType
 from constants.gridCellType import GridCellType
 
 from brain.brain import Brain
-from centralMap import CentralMap
+from centralMemory import CentralMap
 
 from aStar import aStarSearch
 

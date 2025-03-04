@@ -5,7 +5,7 @@ from environment import Environment
 from agent import Agent, Brain
 from ticker import Ticker
 from counter import Counter
-from centralMap import CentralMap
+from centralMemory import CentralMap
 
 from constants.behaviourType import BehaviourType
 from constants.layoutType import LayoutType
