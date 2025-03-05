@@ -2,7 +2,7 @@ import math
 import heapq
 from constants.gridCellType import GridCellType
 
-# A modification of the a* algorithm from Geek for geeks
+# A modification of the a* algorithm from Geeks for geeks
 # https://www.geeksforgeeks.org/a-search-algorithm/
 
 # Modifications:

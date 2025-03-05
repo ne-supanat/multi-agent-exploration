@@ -13,6 +13,9 @@ class Agent:
         self.cellSize = cellSize
         self.vision = np.zeros((3, 3))  # simulate limited vision only 1 cell around
 
+    def getPosition(self):
+        return (self.row, self.column)
+
     def setBrain(self, brainp: Brain):
         self.brain = brainp
 

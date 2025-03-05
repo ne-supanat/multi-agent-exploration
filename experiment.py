@@ -43,7 +43,7 @@ class Experiment:
         # Update grid map for initial stage
         gridMap = environment.gridMap
         for agent in agents:
-            self.updateGrid(gridMap, agent.column, agent.row, agent)
+            self.updateGrid(gridMap, agent.row, agent.column, agent)
 
         environment.drawGrid(canvas)
 
@@ -105,13 +105,13 @@ class Experiment:
         gridMap = environment.gridMap
 
         for agent in agents:
-            newX, newY = agent.update(canvas, gridMap, agents)
+            newColumn, newRow = agent.update(canvas, gridMap, agents)
 
             # Update explored cell counter
-            if gridMap[newY, newX] != GridCellType.EXPLORED.value:
+            if gridMap[newRow, newColumn] != GridCellType.EXPLORED.value:
                 counter.explored(canvas)
 
-            self.updateGrid(gridMap, newX, newY, agent)
+            self.updateGrid(gridMap, newRow, newColumn, agent)
 
         environment.drawGrid(canvas)
 
@@ -135,10 +135,10 @@ class Experiment:
             window,
         )
 
-    def updateGrid(self, gridMap, newX, newY, agent):
+    def updateGrid(self, gridMap, newRow, newColumn, agent):
         # Update explored cell on gridMap
-        if gridMap[newY, newX] != GridCellType.WALL.value:
-            gridMap[newY, newX] = GridCellType.EXPLORED.value
+        if gridMap[newRow, newColumn] != GridCellType.WALL.value:
+            gridMap[newRow, newColumn] = GridCellType.EXPLORED.value
 
         # Update partially explored cell on gridMap
         visionShapeRow, visionShapeColumn = (
@@ -147,11 +147,21 @@ class Experiment:
         )
         for r in range(visionShapeRow):
             for c in range(visionShapeColumn):
-                targetY = newY + r - int(visionShapeRow // 2)
-                targetX = newX + c - int(visionShapeColumn // 2)
+                targetRow = newRow + r - int(visionShapeRow // 2)
+                targetColumn = newColumn + c - int(visionShapeColumn // 2)
 
-                if gridMap[targetY, targetX] == GridCellType.UNEXPLORED.value:
-                    gridMap[targetY, targetX] = GridCellType.PARTIAL_EXPLORED.value
+                if (
+                    targetRow < 0
+                    or targetRow > gridMap.shape[0]
+                    or targetColumn < 0
+                    or targetColumn > gridMap.shape[1]
+                ):
+                    continue
+
+                if gridMap[targetRow, targetColumn] == GridCellType.UNEXPLORED.value:
+                    gridMap[targetRow, targetColumn] = (
+                        GridCellType.PARTIAL_EXPLORED.value
+                    )
 
 
 if __name__ == "__main__":

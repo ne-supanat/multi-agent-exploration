@@ -9,12 +9,16 @@ from constants.gridCellType import GridCellType
 
 class Environment:
     # TODO: agents starting points
-    def __init__(self, layoutType: LayoutType):
+    def __init__(self, layoutType: LayoutType = None):
         self.cellSize = 20  # Pixels per grid cell
         self.gridSize = (0, 0)
         self.gridMap = np.full((0, 0), GridCellType.UNEXPLORED.value, dtype=int)
+        self.layoutType = layoutType
 
         self.setupLayout(layoutType)
+
+    def reset(self):
+        self.setupLayout(self.layoutType)
 
     def setupLayout(self, layoutType) -> np.ndarray:
         layout = None
@@ -36,7 +40,7 @@ class Environment:
         return layout
 
     def setupLayoutTest(self):
-        self.gridSize = (4, 4)  # row, column
+        self.gridSize = (5, 5)  # row, column
         self.gridMap = np.full(self.gridSize, GridCellType.UNEXPLORED.value, dtype=int)
 
         # self.gridMap[1, 1:8] = GridCellType.EXPLORED.value
