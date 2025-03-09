@@ -10,6 +10,7 @@ from centralMemory import CentralMap
 from aStar import aStarSearch
 
 
+# TODO: reassign job if candidate more suitable (no other task left)
 class BrainFrontier(Brain):
     def __init__(self, agentp, centralMap: CentralMap = None):
         self.agent = agentp
