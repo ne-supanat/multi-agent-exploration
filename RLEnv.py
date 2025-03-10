@@ -1,6 +1,7 @@
 import gym
 from gym import spaces
 import numpy as np
+import random
 
 from environment import Environment
 from agent import Agent
@@ -104,20 +105,23 @@ class GridWorldEnv(gym.Env):
     def randomPosition(self) -> int:
         shape = self.environment.gridMap.shape
         return (
-            self.np_random.integers(0 + 1, shape[0] - 2, size=1, dtype=int),  # row
-            self.np_random.integers(0 + 1, shape[1] - 2, size=1, dtype=int),  # column
+            random.randint(0 + 1, shape[0] - 2),  # row
+            random.randint(0 + 1, shape[1] - 2),  # column
         )
 
     def step(self, action: MoveType):
-        if action == MoveType.STAY:
+        savedRow, savedColumn = self.agent.getPosition()
+        savedPos = (savedRow, savedColumn)
+
+        if action == MoveType.STAY.value:
             self.agent.stay()
-        elif action == MoveType.UP:
+        elif action == MoveType.UP.value:
             self.agent.moveUp()
-        elif action == MoveType.DOWN:
+        elif action == MoveType.DOWN.value:
             self.agent.moveDown()
-        elif action == MoveType.LEFT:
+        elif action == MoveType.LEFT.value:
             self.agent.moveLeft()
-        elif action == MoveType.RIGHT:
+        elif action == MoveType.RIGHT.value:
             self.agent.moveRight()
 
         reward = 0
@@ -129,18 +133,21 @@ class GridWorldEnv(gym.Env):
         )
 
         newRow, newColumn = self.agent.getPosition()
+
+        if (
+            newRow <= 0
+            or newRow >= self.environment.gridMap.shape[0] - 1
+            or newColumn <= 0
+            or newColumn >= self.environment.gridMap.shape[1] - 1
+        ):  # agent move out of boundary
+            self.agent.setPosition(savedPos[0], savedPos[1])
+            newRow, newColumn = self.agent.getPosition()
+            reward -= 50
+
         for r in range(visionShapeRow):
             for c in range(visionShapeColumn):
                 targetRow = newRow + r - int(visionShapeRow // 2)
                 targetColumn = newColumn + c - int(visionShapeColumn // 2)
-
-                if (
-                    targetRow < 0
-                    or targetRow >= self.environment.gridMap.shape[0]
-                    or targetColumn < 0
-                    or targetColumn >= self.environment.gridMap.shape[1]
-                ):
-                    continue
 
                 if (
                     self.environment.gridMap[targetRow, targetColumn]
@@ -152,7 +159,7 @@ class GridWorldEnv(gym.Env):
                     reward += 1
 
         # Penalty for not moving
-        if action == MoveType.STAY:
+        if action == MoveType.STAY.value:
             reward += -1
 
         # Reward/Penalty based on where agent go
@@ -161,7 +168,7 @@ class GridWorldEnv(gym.Env):
         if value == GridCellType.WALL.value or self.agent.getPosition() in [
             agent.getPosition() for agent in self.agents
         ]:
-            reward += -1
+            reward += -10
         # Penalty for moving into already explored cell
         elif value == GridCellType.EXPLORED.value:
             reward += -0.5
@@ -197,6 +204,14 @@ class GridWorldEnv(gym.Env):
             for c in range(visionShapeColumn):
                 targetRow = newRow + r - int(visionShapeRow // 2)
                 targetColumn = newColumn + c - int(visionShapeColumn // 2)
+
+                if (
+                    targetRow < 0
+                    or targetRow >= self.environment.gridMap.shape[0]
+                    or targetColumn < 0
+                    or targetColumn >= self.environment.gridMap.shape[1]
+                ):  # target row, column are within map
+                    continue
 
                 if gridMap[targetRow, targetColumn] == GridCellType.UNEXPLORED.value:
                     gridMap[targetRow, targetColumn] = (

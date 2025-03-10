@@ -16,6 +16,7 @@ import environment as environment
 from brain.brainWandering import BrainWandering
 from brain.brainGreedy import BrainGreedy
 from brain.brainFrontier import BrainFrontier
+from brain.brainRL import BrainRL
 
 
 class Experiment:
@@ -84,6 +85,8 @@ class Experiment:
                 brain = BrainGreedy(agent)
             elif behaviourType == BehaviourType.FRONTIER:
                 brain = BrainFrontier(agent, centralMap)
+            elif behaviourType == BehaviourType.REINFORCEMENT:
+                brain = BrainRL(agent)
             else:
                 brain = Brain(agent)
             agent.setBrain(brain)
@@ -119,7 +122,7 @@ class Experiment:
 
         # Update tick
         ticker.nextTick()
-        if ticker.isReachMaxTick() or environment.isFullyExplored():
+        if ticker.isReachMaxTick():  # or environment.isFullyExplored():
             window.destroy()
             return
 
@@ -167,5 +170,5 @@ class Experiment:
 if __name__ == "__main__":
     exp = Experiment()
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES)
-    print(exp.runOnce(BehaviourType.GREEDY, LayoutType.OBSTACLES, noOfAgents=3))
+    print(exp.runOnce(BehaviourType.REINFORCEMENT, LayoutType.PLAIN, noOfAgents=1))
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=1)
