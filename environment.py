@@ -3,6 +3,7 @@ import numpy as np
 
 from constants.layoutType import LayoutType
 from constants.gridCellType import GridCellType
+from imageToArray import imageToArray
 
 # Modification of university of nottingham COMP4105 24-25 module's material
 
@@ -28,6 +29,21 @@ class Environment:
             layout = self.setupLayoutPlain()
         elif layoutType == LayoutType.OBSTACLES:
             layout = self.setupLayoutObstacles()
+        elif layoutType == LayoutType.MAZE:
+            layout = self.setupLayoutMaze()
+        elif layoutType == LayoutType.U_SHAPE:
+            layout = self.setupLayoutUShape()
+        elif layoutType == LayoutType.DONUT_SHAPE:
+            layout = self.setupLayoutDonutShape()
+        elif layoutType == LayoutType.ROOM:
+            layout = self.setupLayoutRoom()
+        elif layoutType == LayoutType.RL_PLAIN:
+            layout = self.setupLayoutRLPlain()
+        elif layoutType == LayoutType.RL_OBSTACLES:
+            layout = self.setupLayoutRLObstacles()
+        elif layoutType == LayoutType.RL_MAZE:
+            layout = self.setupLayoutRLMaze()
+
         # TODO:
         # elif layoutType == LayoutType.MAZE:
         #     layout = self.setupLayoutPlain()
@@ -47,16 +63,40 @@ class Environment:
         # self.gridMap[2, 1:9] = GridCellType.PARTIAL_EXPLORED.value
 
     def setupLayoutPlain(self):
-        self.gridSize = (30, 30)  # row, column
-        self.gridMap = np.full(self.gridSize, GridCellType.UNEXPLORED.value, dtype=int)
+        self.gridSize = (25, 25)  # row, column
+        self.gridMap = imageToArray("cw/images/exp_plain.png", 25, 25)
 
     def setupLayoutObstacles(self):
-        self.gridSize = (30, 30)  # row, column
-        self.gridMap = np.full(self.gridSize, GridCellType.UNEXPLORED.value, dtype=int)
+        self.gridSize = (25, 25)  # row, column
+        self.gridMap = imageToArray("cw/images/exp_obs.png", 25, 25)
 
-        self.gridMap[0:10, 10] = GridCellType.WALL.value
-        self.gridMap[16, 5:16] = GridCellType.WALL.value
-        self.gridMap[15:29, 20] = GridCellType.WALL.value
+    def setupLayoutMaze(self):
+        self.gridSize = (25, 25)  # row, column
+        self.gridMap = imageToArray("cw/images/exp_maze.png", 25, 25)
+
+    def setupLayoutUShape(self):
+        self.gridSize = (25, 25)  # row, column
+        self.gridMap = imageToArray("cw/images/exp_u.png", 25, 25)
+
+    def setupLayoutDonutShape(self):
+        self.gridSize = (25, 25)  # row, column
+        self.gridMap = imageToArray("cw/images/exp_donut.png", 25, 25)
+
+    def setupLayoutRoom(self):
+        self.gridSize = (25, 25)  # row, column
+        self.gridMap = imageToArray("cw/images/exp_room.png", 25, 25)
+
+    def setupLayoutRLPlain(self):
+        self.gridSize = (20, 20)  # row, column
+        self.gridMap = imageToArray("cw/images/rl_plain.png", 20, 20)
+
+    def setupLayoutRLObstacles(self):
+        self.gridSize = (20, 20)  # row, column
+        self.gridMap = imageToArray("cw/images/rl_obs.png", 20, 20)
+
+    def setupLayoutRLMaze(self):
+        self.gridSize = (20, 20)  # row, column
+        self.gridMap = imageToArray("cw/images/rl_maze.png", 20, 20)
 
     def createBoundary(self):
         self.gridMap[0 : self.gridSize[0], 0] = GridCellType.WALL.value

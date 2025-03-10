@@ -6,5 +6,9 @@ class LayoutType(Enum):
     PLAIN = 1
     OBSTACLES = 2
     MAZE = 3
-    DONUT_SHAPE = 3
-    U_SHAPE = 3
+    DONUT_SHAPE = 4
+    U_SHAPE = 5
+    ROOM = 6
+    RL_PLAIN = -1
+    RL_OBSTACLES = -2
+    RL_MAZE = -3
