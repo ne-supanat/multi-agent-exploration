@@ -13,4 +13,5 @@ def imageToArray(path: str, width, height):
     # Convert to NumPy array
     arr = np.array(img, dtype=int)
 
+    # Change value white pixel (>100) to unexplored cell and black pixel (<=100) to wall cell
     return np.where(arr > 100, GridCellType.UNEXPLORED.value, GridCellType.WALL.value)
