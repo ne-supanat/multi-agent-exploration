@@ -1,3 +1,4 @@
+import numpy as np
 import tkinter as tk
 from typing import List
 
@@ -5,7 +6,7 @@ from environment import Environment
 from agent import Agent, Brain
 from ticker import Ticker
 from counter import Counter
-from centralMemory import CentralMap
+from centralMemory import CentralMemory
 
 from constants.behaviourType import BehaviourType
 from constants.layoutType import LayoutType
@@ -16,6 +17,7 @@ import environment as environment
 from brain.brainWandering import BrainWandering
 from brain.brainGreedy import BrainGreedy
 from brain.brainFrontier import BrainFrontier
+from brain.brainGreedyFrontier import BrainGreedyFrontier
 from brain.brainRL import BrainRL
 
 
@@ -71,9 +73,9 @@ class Experiment:
         # pos = [(1, 1), (1, 2), (1, 3), (1, 4)]  # row, column
         pos = [(1, 1), (1, 2), (2, 1)]  # row, column
 
-        maxRow, maxColumn = map(max, zip(*pos))
-        centralMap = CentralMap(maxColumn + 1, maxRow + 1)
-        # centralMap = CentralMap(10, 10)
+        # maxRow, maxColumn = map(max, zip(*pos))
+        # centralMap = CentralMemory(maxColumn + 1, maxRow + 1)
+        centralMap = CentralMemory(25, 25)
 
         # Spawn agents
         for i in range(noOfAgents):
@@ -86,6 +88,10 @@ class Experiment:
                 brain = BrainGreedy(agent)
             elif behaviourType == BehaviourType.FRONTIER:
                 brain = BrainFrontier(agent, centralMap)
+            elif behaviourType == BehaviourType.GREEDY_FRONTIER:
+                brainGreedy = BrainGreedy(agent)
+                brainFrontier = BrainFrontier(agent, centralMap)
+                brain = BrainGreedyFrontier(agent, brainGreedy, brainFrontier)
             elif behaviourType == BehaviourType.REINFORCEMENT:
                 brain = BrainRL(agent, environment)
             else:
@@ -165,6 +171,4 @@ class Experiment:
 
 if __name__ == "__main__":
     exp = Experiment()
-    # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES)
-    print(exp.runOnce(BehaviourType.FRONTIER, LayoutType.ROOM, noOfAgents=3))
-    # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=1)
+    print(exp.runOnce(BehaviourType.GREEDY_FRONTIER, LayoutType.ROOM, noOfAgents=1))

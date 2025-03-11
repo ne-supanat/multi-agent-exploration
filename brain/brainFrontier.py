@@ -5,28 +5,46 @@ from constants.moveType import MoveType
 from constants.gridCellType import GridCellType
 
 from brain.brain import Brain
-from centralMemory import CentralMap
+from centralMemory import CentralMemory
 
 from aStar import aStarSearch
 
 
 # TODO: reassign job if candidate more suitable (no other task left)
 class BrainFrontier(Brain):
-    def __init__(self, agentp, centralMap: CentralMap = None):
+    def __init__(self, agentp, centralMemory: CentralMemory = None):
         self.agent = agentp
         self.localRow = agentp.row
         self.localColumn = agentp.column
-        self.localMap = centralMap if not centralMap is None else agentp.vision.copy()
+        self.localMap = (
+            centralMemory if not centralMemory is None else agentp.vision.copy()
+        )
         self.targetCell = None
         self.queue = []
         self.stuck = 0
 
     # Decide what should be the next move
     def thinkAndAct(self, vision, agents: list) -> MoveType:
+        return self.thinkBehavior(vision, agents)
+
+    # Frontier behavior thinking:
+    # remember all target to explored cell & assigned task using central memory
+    def thinkBehavior(self, vision, agents: list) -> MoveType:
         self.updateLocalMapSize(vision)
         self.gainInfoFromVision(vision)
         availableMoves = self.checkAvailableMoves(vision, agents)
 
+        bestMove = self.findBestMove(availableMoves)
+
+        self.updateLocalPostion(bestMove)
+
+        # Remove current position from frontier list
+        if (self.localRow, self.localColumn) in self.localMap.frontiers:
+            self.localMap.removeFrontier((self.localRow, self.localColumn))
+
+        return bestMove
+
+    def findBestMove(self, availableMoves):
         # print(self.localMap.map)
         if self.agent.name in self.localMap.blackboard:
             self.targetCell = self.localMap.blackboard[self.agent.name]
@@ -62,12 +80,6 @@ class BrainFrontier(Brain):
                 bestMove = MoveType.STAY
         else:
             bestMove = MoveType.STAY
-
-        self.updateLocalPostion(bestMove)
-
-        # Remove current position from frontier list
-        if (self.localRow, self.localColumn) in self.localMap.frontiers:
-            self.localMap.removeFrontier((self.localRow, self.localColumn))
 
         return bestMove
 

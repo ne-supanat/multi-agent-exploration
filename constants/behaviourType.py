@@ -6,4 +6,4 @@ class BehaviourType(Enum):
     GREEDY = 2
     FRONTIER = 3
     REINFORCEMENT = 4
-    # FRONTIER + GREEDY
+    GREEDY_FRONTIER = 5

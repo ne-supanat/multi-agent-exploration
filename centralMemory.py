@@ -2,7 +2,7 @@ import numpy as np
 from constants.gridCellType import GridCellType
 
 
-class CentralMap:
+class CentralMemory:
     def __init__(self, sizeRow, sizeColumn):
         self.map = np.full(
             (sizeRow, sizeColumn), GridCellType.UNEXPLORED.value, dtype=int
@@ -62,7 +62,7 @@ class CentralMap:
         self.map[row, column] = value
 
     def addFrontier(self, pos):
-        self.frontiers.append(pos)
+        self.frontiers.insert(0, pos)
 
     def removeFrontier(self, pos):
         self.frontiers.remove(pos)
