@@ -3,7 +3,6 @@ from constants.behaviourType import BehaviourType
 from constants.moveType import MoveType
 
 
-# TODO: seperate brain behavior class
 class Brain:
 
     def __init__(self, agentp):

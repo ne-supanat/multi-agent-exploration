@@ -1,5 +1,4 @@
 import random
-import numpy as np
 
 from constants.moveType import MoveType
 from constants.gridCellType import GridCellType

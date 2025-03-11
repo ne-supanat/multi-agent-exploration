@@ -16,7 +16,6 @@ from constants.gridCellType import GridCellType
 
 
 # TODO: add document
-# TODO: use agent local map instead
 class GridWorldEnv(gym.Env):
     def __init__(
         self,
@@ -61,23 +60,6 @@ class GridWorldEnv(gym.Env):
                     shape=environment.gridMap.shape,
                     dtype=int,
                 ),
-                # "agent_positions": spaces.Box(
-                #     low=np.tile(
-                #         np.array([0, 0]),
-                #         (len(self.agents), 1),
-                #     ),  # Min values (row, column)
-                #     high=np.tile(
-                #         np.array(
-                #             [
-                #                 environment.gridMap.shape[0] - 1,
-                #                 environment.gridMap.shape[1] - 1,
-                #             ]
-                #         ),
-                #         (len(self.agents), 1),
-                #     ),  # Max values (max row -1 , max column -1)
-                #     shape=(len(self.agents), 2),
-                #     dtype=np.int32,
-                # ),
             }
         )
 
@@ -89,7 +71,6 @@ class GridWorldEnv(gym.Env):
             "position": self.agent.getPosition(),
             "vision": self.getVision(),
             "local_map": self.localMap.copy(),
-            # "agent_positions": [agent.getPosition() for agent in self.agents],
         }
 
     def getVision(self):

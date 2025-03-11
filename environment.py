@@ -9,7 +9,6 @@ from imageToArray import imageToArray
 
 
 class Environment:
-    # TODO: agents starting points
     def __init__(self, layoutType: LayoutType = None):
         self.cellSize = 20  # Pixels per grid cell
         self.gridSize = (0, 0)
@@ -43,14 +42,6 @@ class Environment:
             layout = self.setupLayoutRLObstacles()
         elif layoutType == LayoutType.RL_MAZE:
             layout = self.setupLayoutRLMaze()
-
-        # TODO:
-        # elif layoutType == LayoutType.MAZE:
-        #     layout = self.setupLayoutPlain()
-        # elif layoutType == LayoutType.DONUT_SHAPE:
-        #     layout = self.setupLayoutPlain()
-        # elif layoutType == LayoutType.U_SHAPE:
-        #     layout = self.setupLayoutPlain()
 
         self.createBoundary()
         return layout
