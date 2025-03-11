@@ -38,7 +38,7 @@ class Experiment:
 
         # Spawn agents
         agents = self.createAgents(
-            canvas, noOfAgents, behaviourType, environment.cellSize
+            canvas, noOfAgents, behaviourType, environment.cellSize, environment
         )
 
         # Update grid map for initial stage
@@ -65,6 +65,7 @@ class Experiment:
         noOfAgents: int,
         behaviourType: BehaviourType,
         cellSize: int,
+        environment: Environment = None,
     ):
         agents = []
         # pos = [(1, 1), (1, 2), (1, 3), (1, 4)]  # row, column
@@ -86,7 +87,7 @@ class Experiment:
             elif behaviourType == BehaviourType.FRONTIER:
                 brain = BrainFrontier(agent, centralMap)
             elif behaviourType == BehaviourType.REINFORCEMENT:
-                brain = BrainRL(agent)
+                brain = BrainRL(agent, environment)
             else:
                 brain = Brain(agent)
             agent.setBrain(brain)
@@ -139,36 +140,31 @@ class Experiment:
         )
 
     def updateGrid(self, gridMap, newRow, newColumn, agent):
+        # Update partially explored cell on gridMap
+        halfVisionRow, halfVisionColumn = (
+            int(agent.vision.shape[0] // 2),  # vision shape row
+            int(agent.vision.shape[1] // 2),  # vision shape column
+        )
+
+        topRow = newRow - halfVisionRow
+        bottomRow = newRow + halfVisionRow + 1
+        leftColumn = newColumn - halfVisionColumn
+        rightColumn = newColumn + halfVisionColumn + 1
+
+        visionGrid = gridMap[topRow:bottomRow, leftColumn:rightColumn]
+        visionGrid[visionGrid == GridCellType.UNEXPLORED.value] = (
+            GridCellType.PARTIAL_EXPLORED.value
+        )
+
+        gridMap[topRow:bottomRow, leftColumn:rightColumn] = visionGrid
+
         # Update explored cell on gridMap
         if gridMap[newRow, newColumn] != GridCellType.WALL.value:
             gridMap[newRow, newColumn] = GridCellType.EXPLORED.value
-
-        # Update partially explored cell on gridMap
-        visionShapeRow, visionShapeColumn = (
-            agent.vision.shape[0],
-            agent.vision.shape[1],
-        )
-        for r in range(visionShapeRow):
-            for c in range(visionShapeColumn):
-                targetRow = newRow + r - int(visionShapeRow // 2)
-                targetColumn = newColumn + c - int(visionShapeColumn // 2)
-
-                if (
-                    targetRow < 0
-                    or targetRow > gridMap.shape[0]
-                    or targetColumn < 0
-                    or targetColumn > gridMap.shape[1]
-                ):
-                    continue
-
-                if gridMap[targetRow, targetColumn] == GridCellType.UNEXPLORED.value:
-                    gridMap[targetRow, targetColumn] = (
-                        GridCellType.PARTIAL_EXPLORED.value
-                    )
 
 
 if __name__ == "__main__":
     exp = Experiment()
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES)
-    print(exp.runOnce(BehaviourType.FRONTIER, LayoutType.MAZE, noOfAgents=1))
+    print(exp.runOnce(BehaviourType.REINFORCEMENT, LayoutType.PLAIN, noOfAgents=1))
     # exp.runOnce(BehaviourType.FRONTIER, LayoutType.OBSTACLES, noOfAgents=1)

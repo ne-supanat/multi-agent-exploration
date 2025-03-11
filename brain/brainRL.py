@@ -2,6 +2,7 @@ import random
 import torch
 import numpy as np
 import copy
+from scipy.ndimage import zoom
 
 from constants.moveType import MoveType
 
@@ -11,7 +12,10 @@ from environment import Environment
 from RLEnv import GridWorldEnv
 from RLTrainingDQN import DQN
 from RLTrainingPG import PolicyNetwork
+from constants.gridCellType import GridCellType
 import os
+import torch.nn.functional as F
+
 
 # fixing problem: OMP: Error #15: Initializing libomp.dylib, but found libiomp5.dylib already initialized.
 # https://stackoverflow.com/questions/53014306/error-15-initializing-libiomp5-dylib-but-found-libiomp5-dylib-already-initial
@@ -19,32 +23,45 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 
 
 class BrainRL(Brain):
+    def __init__(self, agentp, environment: Environment):
+        self.agent = agentp
+        self.environment = environment
+        self.localMap = np.full(
+            environment.gridMap.shape, GridCellType.UNEXPLORED.value, dtype=int
+        )
+
     # Decide what should be the next move
     def thinkAndAct(self, vision, agents: list) -> MoveType:
+        self.updateLocalMap(vision)
         availableMoves = self.checkAvailableMoves(vision, agents)
 
-        # Load environment
-        copy_obj = copy.copy(self.agent)
-        environment = Environment(LayoutType.TEST)
-        env = GridWorldEnv(
-            environment=environment,
-            agent=copy_obj,
-            agents=[],
-        )
-        obs = env.reset()
+        # Resize local map to match trained layout shape (20x20)
+        h, w = self.localMap.shape
+        targetSize = (20, 20)
+        zoom_factors = (targetSize[0] / h, targetSize[1] / w)
+        resizedLocalMap = zoom(
+            self.localMap, zoom_factors, order=1
+        )  # order=1 = bilinear
 
-        n_actions = [type.value for type in MoveType]
-        size_actions = len(n_actions)
-        state_dim = self.preprocess_observation(env.reset()).shape[0]
+        obs = {
+            "position": self.agent.getPosition(),
+            "vision": vision,
+            "local_map": resizedLocalMap,
+            # "agent_positions": [agent.getPosition() for agent in self.agents],
+        }
 
-        # Load model DQN
-        policy_net = DQN(state_dim, size_actions)  # match your original dimensions
-        policy_net.load_state_dict(torch.load("dqn_model.pt"))
-        policy_net.eval()
+        state_dim = self.preprocess_observation(obs).shape[0]
 
-        # # Load model PG
-        # policy_net = PolicyNetwork(state_dim)
-        # policy_net.load_state_dict(torch.load("pg_model.pt", weights_only=True))
+        # # Load model DQN
+        # policy_net = DQN(
+        #     state_dim, len([type.value for type in MoveType])
+        # )  # match your original dimensions
+        # policy_net.load_state_dict(torch.load("dqn_model.pt", weights_only=True))
+        # # policy_net.eval()
+
+        # Load model PG
+        policy_net = PolicyNetwork(state_dim)
+        policy_net.load_state_dict(torch.load("pg_model.pt", weights_only=True))
         # policy_net.eval()
 
         # Convert observation to tensor (adjust shape if needed)
@@ -53,20 +70,45 @@ class BrainRL(Brain):
         )  # [1, obs_dim]
 
         with torch.no_grad():
+            print(policy_net(obs_tensor).argmax(dim=1))
             action = policy_net(obs_tensor).argmax(dim=1).item()
 
         return MoveType(action) if MoveType(action) in availableMoves else MoveType.STAY
 
-    def preprocess_observation(self, obs):
-        full_map = obs["full_map"].flatten()
-        # agent_pos = obs["agent_positions"].flatten()
-        return np.concatenate(
-            (
-                full_map,
-                # agent_pos
-            )
+    def updateLocalMap(self, vision):
+        # Update partially explored cell on gridMap
+        halfVisionRow, halfVisionColumn = (
+            int(self.agent.vision.shape[0] // 2),  # vision shape row
+            int(self.agent.vision.shape[1] // 2),  # vision shape column
         )
 
-    # Behavior thinking: depends on behaviour type
-    def thinkBehavior(self, availableMoves) -> MoveType:
-        pass
+        topRow = self.agent.row - halfVisionRow
+        bottomRow = self.agent.row + halfVisionRow + 1
+        leftColumn = self.agent.column - halfVisionColumn
+        rightColumn = self.agent.column + halfVisionColumn + 1
+
+        self.localMap[topRow:bottomRow, leftColumn:rightColumn] = vision
+
+    def gainInfoFromVision(self, vision):
+        # Update local map with value from vision
+        visionRows, visionColumns = vision.shape
+
+        for visionRow in range(visionRows):
+            for visionColumn in range(visionColumns):
+                targetRow = self.localRow + visionRow - int(visionRows // 2)
+                targetColumn = self.localColumn + visionColumn - int(visionColumns // 2)
+
+                self.updateLocalMapValue(
+                    targetRow, targetColumn, vision[visionRow][visionColumn]
+                )
+
+                # Add new fronteir
+                self.updateFronteir(
+                    targetRow, targetColumn, vision[visionRow][visionColumn]
+                )
+
+    def preprocess_observation(self, obs):
+        position = obs["position"]
+        vision = obs["vision"].flatten()
+        localmap = obs["local_map"].flatten()
+        return np.concatenate((position, vision, localmap))
