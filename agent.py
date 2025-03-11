@@ -40,16 +40,21 @@ class Agent:
 
     # What happen at each timestep
     def update(self, canvas, gridMap, agents):
+        self.gainVisionInformation(gridMap)
+        self.move(agents)
+
+        canvas.delete(self.name)
+        self.draw(canvas)
+
+        return self.column, self.row
+
+    def gainVisionInformation(self, gridMap):
         for r in range(self.vision.shape[0]):
             for c in range(self.vision.shape[1]):
                 self.vision[r, c] = gridMap[self.row + r - 1, self.column + c - 1]
 
-        self.move(canvas, agents)
-
-        return self.column, self.row
-
     # Handle movement
-    def move(self, canvas, agents):
+    def move(self, agents):
         moveType = self.brain.thinkAndAct(self.vision, agents)
 
         if moveType == MoveType.STAY:
@@ -62,9 +67,6 @@ class Agent:
             self.moveLeft()
         elif moveType == MoveType.RIGHT:
             self.moveRight()
-
-        canvas.delete(self.name)
-        self.draw(canvas)
 
     def stay(self):
         return
