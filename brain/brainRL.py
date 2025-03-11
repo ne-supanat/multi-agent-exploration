@@ -1,20 +1,16 @@
-import random
 import torch
 import numpy as np
-import copy
 from scipy.ndimage import zoom
 
 from constants.moveType import MoveType
 
 from brain.brain import Brain
-from constants.layoutType import LayoutType
 from environment import Environment
-from RLEnv import GridWorldEnv
 from RLTrainingDQN import DQN
 from RLTrainingPG import PolicyNetwork
 from constants.gridCellType import GridCellType
 import os
-import torch.nn.functional as F
+from centralMemory import CentralMemory
 
 
 # fixing problem: OMP: Error #15: Initializing libomp.dylib, but found libiomp5.dylib already initialized.
@@ -23,11 +19,17 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 
 
 class BrainRL(Brain):
-    def __init__(self, agentp, environment: Environment):
+    def __init__(
+        self, agentp, environment: Environment, centralMemory: CentralMemory = None
+    ):
         self.agent = agentp
         self.environment = environment
-        self.localMap = np.full(
-            environment.gridMap.shape, GridCellType.UNEXPLORED.value, dtype=int
+        self.localMap = (
+            centralMemory.map
+            if not centralMemory is None
+            else np.full(
+                environment.gridMap.shape, GridCellType.UNEXPLORED.value, dtype=int
+            )
         )
 
     # Decide what should be the next move
@@ -52,17 +54,17 @@ class BrainRL(Brain):
 
         state_dim = self.preprocess_observation(obs).shape[0]
 
-        # # Load model DQN
-        # policy_net = DQN(
-        #     state_dim, len([type.value for type in MoveType])
-        # )  # match your original dimensions
-        # policy_net.load_state_dict(torch.load("dqn_model.pt", weights_only=True))
-        # # policy_net.eval()
-
-        # Load model PG
-        policy_net = PolicyNetwork(state_dim)
-        policy_net.load_state_dict(torch.load("pg_model.pt", weights_only=True))
+        # Load model DQN
+        policy_net = DQN(
+            state_dim, len([type.value for type in MoveType])
+        )  # match your original dimensions
+        policy_net.load_state_dict(torch.load("dqn_model.pt", weights_only=True))
         # policy_net.eval()
+
+        # # Load model PG
+        # policy_net = PolicyNetwork(state_dim)
+        # policy_net.load_state_dict(torch.load("pg_model.pt", weights_only=True))
+        # # policy_net.eval()
 
         # Convert observation to tensor (adjust shape if needed)
         obs_tensor = torch.FloatTensor(self.preprocess_observation(obs)).unsqueeze(

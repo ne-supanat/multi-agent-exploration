@@ -1,4 +1,3 @@
-import numpy as np
 import tkinter as tk
 from typing import List
 
@@ -20,6 +19,8 @@ from brain.brainFrontier import BrainFrontier
 from brain.brainGreedyFrontier import BrainGreedyFrontier
 from brain.brainRL import BrainRL
 
+import copy
+
 
 class Experiment:
     def __init__(self):
@@ -27,7 +28,11 @@ class Experiment:
 
     # Run experiment 1 time
     def runOnce(
-        self, behaviourType: BehaviourType, layoutType: LayoutType, noOfAgents: int = 1
+        self,
+        behaviourType: BehaviourType,
+        layoutType: LayoutType,
+        noOfAgents: int = 1,
+        shareKnowledge=True,
     ):
         window = tk.Tk()
         window.resizable(False, False)
@@ -40,7 +45,12 @@ class Experiment:
 
         # Spawn agents
         agents = self.createAgents(
-            canvas, noOfAgents, behaviourType, environment.cellSize, environment
+            canvas,
+            noOfAgents,
+            behaviourType,
+            environment.cellSize,
+            environment,
+            shareKnowledge,
         )
 
         # Update grid map for initial stage
@@ -67,33 +77,55 @@ class Experiment:
         noOfAgents: int,
         behaviourType: BehaviourType,
         cellSize: int,
+        shareKnowledge: bool,
         environment: Environment = None,
     ):
         agents = []
-        # pos = [(1, 1), (1, 2), (1, 3), (1, 4)]  # row, column
-        pos = [(1, 1), (1, 2), (2, 1)]  # row, column
+        spawnPositions = []
 
-        # maxRow, maxColumn = map(max, zip(*pos))
-        # centralMap = CentralMemory(maxColumn + 1, maxRow + 1)
-        centralMap = CentralMemory(25, 25)
+        for r in range(environment.gridMap.shape[0]):
+            for c in range(environment.gridMap.shape[1]):
+                if environment.gridMap[r, c] != GridCellType.WALL.value:
+                    spawnPositions.append((r, c))
+
+                if len(spawnPositions) >= noOfAgents:
+                    break
+            if len(spawnPositions) >= noOfAgents:
+                break
+
+        maxRow, maxColumn = map(max, zip(*spawnPositions))
+
+        if behaviourType == BehaviourType.REINFORCEMENT:
+            centralMap = CentralMemory(environment.gridSize[0], environment.gridSize[1])
+        elif behaviourType in [BehaviourType.FRONTIER, BehaviourType.GREEDY_FRONTIER]:
+            centralMap = CentralMemory(maxColumn + 1, maxRow + 1)
 
         # Spawn agents
         for i in range(noOfAgents):
             agent = Agent(f"A{i}", cellSize)
-            agent.setPosition(pos[i % len(pos)][0], pos[i % len(pos)][1])
+            agent.setPosition(
+                spawnPositions[i % len(spawnPositions)][0],
+                spawnPositions[i % len(spawnPositions)][1],
+            )
 
             if behaviourType == BehaviourType.WANDERING:
                 brain = BrainWandering(agent)
             elif behaviourType == BehaviourType.GREEDY:
                 brain = BrainGreedy(agent)
             elif behaviourType == BehaviourType.FRONTIER:
+                if shareKnowledge:
+                    centralMap = copy.deepcopy(centralMap)
                 brain = BrainFrontier(agent, centralMap)
             elif behaviourType == BehaviourType.GREEDY_FRONTIER:
+                if shareKnowledge:
+                    centralMap = copy.deepcopy(centralMap)
                 brainGreedy = BrainGreedy(agent)
                 brainFrontier = BrainFrontier(agent, centralMap)
                 brain = BrainGreedyFrontier(agent, brainGreedy, brainFrontier)
             elif behaviourType == BehaviourType.REINFORCEMENT:
-                brain = BrainRL(agent, environment)
+                if shareKnowledge:
+                    centralMap = copy.deepcopy(centralMap)
+                brain = BrainRL(agent, environment, centralMap)
             else:
                 brain = Brain(agent)
             agent.setBrain(brain)
@@ -171,4 +203,11 @@ class Experiment:
 
 if __name__ == "__main__":
     exp = Experiment()
-    print(exp.runOnce(BehaviourType.GREEDY_FRONTIER, LayoutType.ROOM, noOfAgents=1))
+    print(
+        exp.runOnce(
+            BehaviourType.WANDERING,
+            LayoutType.DONUT_SHAPE,
+            noOfAgents=10,
+            shareKnowledge=True,
+        )
+    )
