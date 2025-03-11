@@ -2,12 +2,15 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.distributions import Categorical
+import torch.optim as optim
 
 from agent import Agent
 from environment import Environment
 from RLEnv import GridWorldEnv
 
 from constants.layoutType import LayoutType
+
+from brain.brainWandering import BrainWandering
 
 # Modification of Policy gradient implementation by geeks for geeks from
 # https://www.geeksforgeeks.org/reinforcement-learning-using-pytorch/
@@ -32,14 +35,10 @@ class PolicyNetwork(nn.Module):
 
 
 def preprocess_observation(obs):
-    full_map = obs["full_map"].flatten()
-    # agent_pos = obs["agent_positions"].flatten()
-    return np.concatenate(
-        (
-            full_map,
-            # agent_pos
-        )
-    )
+    position = obs["position"]
+    vision = obs["vision"].flatten()
+    localmap = obs["local_map"].flatten()
+    return np.concatenate((position, vision, localmap))
 
 
 def compute_discounted_rewards(rewards, gamma=0.99):
@@ -55,15 +54,27 @@ def compute_discounted_rewards(rewards, gamma=0.99):
     return discounted_rewards
 
 
-def train(env: GridWorldEnv, policy, episodes=1000, episode_rewards=[]):
-    for episode in range(episodes):
+def train(
+    env: GridWorldEnv,
+    policy: PolicyNetwork,
+    optimizer,
+    num_episodes=1000,
+    canTerminated=False,
+):
+
+    terminatePoint = env.environment.gridMap.size * 2
+
+    for episode in range(num_episodes):
         obs = env.reset()
         state = preprocess_observation(obs)
         log_probs = []
         rewards = []
+
+        count = 0
+        terminated = False
         done = False
 
-        while not done:
+        while not done and not terminated:
             state = torch.FloatTensor(state).unsqueeze(0)
             probs = policy(state)
             m = Categorical(probs)
@@ -74,41 +85,53 @@ def train(env: GridWorldEnv, policy, episodes=1000, episode_rewards=[]):
             rewards.append(reward)
             # Inside the train function, after an episode ends:
 
-            env.render()
+            if canTerminated:
+                count += 1
+                if count >= terminatePoint:
+                    terminated = True
+
+            # env.render()
 
             if done:
-                episode_rewards.append(sum(rewards))
                 discounted_rewards = compute_discounted_rewards(rewards)
                 policy_loss = []
                 for log_prob, Gt in zip(log_probs, discounted_rewards):
                     policy_loss.append(-log_prob * Gt)
+                optimizer.zero_grad()
                 policy_loss = torch.cat(policy_loss).sum()
+                # print(torch.isnan(policy_loss), torch.isinf(policy_loss))
+                # print(policy_loss.item())
                 policy_loss.backward()
+                optimizer.step()
 
-                if episode % 50 == 0:
-                    print(f"Episode {episode}, Total Reward: {sum(rewards)}")
-                break
+        print(f"Episode {episode+1}, Total Reward: {sum(rewards)}")
 
     torch.save(policy.state_dict(), "pg_model.pt")
     print("Complete")
 
 
 if __name__ == "__main__":
-    # Define custom environment
-    environment = Environment(LayoutType.TEST)
-    env = GridWorldEnv(
-        environment=environment,
-        agent=Agent("A0", environment.cellSize),
-        agents=[],
-    )
+    trainingLayout = [LayoutType.RL_PLAIN]
+    # trainingLayout = [LayoutType.RL_PLAIN, LayoutType.RL_OBSTACLES, LayoutType.RL_MAZE]
 
-    state_dim = preprocess_observation(env.reset()).shape[0]
-    policy = PolicyNetwork(state_dim)
+    policy: PolicyNetwork
 
-    # Training process
-    train(env, policy)
+    for layout in trainingLayout:
+        # Define custom environment
+        environment = Environment(layout)
+        agent = Agent("A0", environment.cellSize)
+        # friend = Agent("A1", environment.cellSize)
+        # friend.setBrain(BrainWandering(friend))
 
-    # Example of using trained model
-    # TODO: remove this
-    # policy.load_state_dict(torch.load("pg_model.pt", weights_only=True))
-    # policy.eval()
+        env = GridWorldEnv(
+            environment=environment,
+            agent=agent,
+            agents=[],
+        )
+
+        state_dim = preprocess_observation(env.reset()).shape[0]
+        policy = PolicyNetwork(state_dim)
+        optimizer = optim.Adam(policy.parameters(), lr=1e-2)
+
+        # Training process
+        train(env, policy, optimizer)

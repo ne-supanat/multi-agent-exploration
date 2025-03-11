@@ -28,17 +28,17 @@ class GridWorldEnv(gym.Env):
         self.agent = agent
         self.agents = agents
 
+        self.localMap = np.full(
+            environment.gridMap.shape,
+            GridCellType.UNEXPLORED.value,
+            dtype=int,
+        )
+
         cellTypes = [type.value for type in GridCellType]
 
         self.observation_space = spaces.Dict(
             {
-                "full_map": spaces.Box(
-                    low=min(cellTypes),
-                    high=max(cellTypes),
-                    shape=environment.gridMap.shape,
-                    dtype=int,
-                ),
-                "self_position": spaces.Box(
+                "position": spaces.Box(
                     low=np.array([0, 0]),  # Min values (row, column)
                     high=np.array(
                         [
@@ -49,23 +49,35 @@ class GridWorldEnv(gym.Env):
                     shape=(2,),
                     dtype=int,
                 ),
-                "agent_positions": spaces.Box(
-                    low=np.tile(
-                        np.array([0, 0]),
-                        (len(self.agents), 1),
-                    ),  # Min values (row, column)
-                    high=np.tile(
-                        np.array(
-                            [
-                                environment.gridMap.shape[0] - 1,
-                                environment.gridMap.shape[1] - 1,
-                            ]
-                        ),
-                        (len(self.agents), 1),
-                    ),  # Max values (max row -1 , max column -1)
-                    shape=(len(self.agents), 2),
-                    dtype=np.int32,
+                "vision": spaces.Box(
+                    low=min(cellTypes),  # Min value within grid cell type
+                    high=max(cellTypes),  # Max value within grid cell type
+                    shape=agent.vision.shape,
+                    dtype=int,
                 ),
+                "local_map": spaces.Box(
+                    low=min(cellTypes),  # Min value within grid cell type
+                    high=max(cellTypes),  # Max value within grid cell type
+                    shape=environment.gridMap.shape,
+                    dtype=int,
+                ),
+                # "agent_positions": spaces.Box(
+                #     low=np.tile(
+                #         np.array([0, 0]),
+                #         (len(self.agents), 1),
+                #     ),  # Min values (row, column)
+                #     high=np.tile(
+                #         np.array(
+                #             [
+                #                 environment.gridMap.shape[0] - 1,
+                #                 environment.gridMap.shape[1] - 1,
+                #             ]
+                #         ),
+                #         (len(self.agents), 1),
+                #     ),  # Max values (max row -1 , max column -1)
+                #     shape=(len(self.agents), 2),
+                #     dtype=np.int32,
+                # ),
             }
         )
 
@@ -74,10 +86,23 @@ class GridWorldEnv(gym.Env):
 
     def _get_obs(self):
         return {
-            "full_map": self.environment.gridMap,
-            "self_position": self.agent.getPosition(),
-            "agent_positions": [agent.getPosition() for agent in self.agents],
+            "position": self.agent.getPosition(),
+            "vision": self.getVision(),
+            "local_map": self.localMap.copy(),
+            # "agent_positions": [agent.getPosition() for agent in self.agents],
         }
+
+    def getVision(self):
+        row, column = self.agent.getPosition()
+        halfVisionRow, halfVisionColumn = (
+            int(self.agent.vision.shape[0] // 2),  # vision shape row
+            int(self.agent.vision.shape[1] // 2),  # vision shape column
+        )
+        view = self.environment.gridMap[
+            row - halfVisionRow : row + halfVisionRow + 1,
+            column - halfVisionColumn : column + halfVisionColumn + 1,
+        ]
+        return view
 
     def reset(self, seed=None, options=None):
         # We need the following line to seed self.np_random
@@ -96,7 +121,7 @@ class GridWorldEnv(gym.Env):
             agent.setPosition(randomPos[0], randomPos[1])
 
         for agent in [self.agent] + self.agents:
-            self.updateGrid(self.environment.gridMap, agent.row, agent.column, agent)
+            self.updateGrid(self.environment.gridMap, agent)
 
         observation = self._get_obs()
 
@@ -139,7 +164,7 @@ class GridWorldEnv(gym.Env):
             or newRow >= self.environment.gridMap.shape[0] - 1
             or newColumn <= 0
             or newColumn >= self.environment.gridMap.shape[1] - 1
-        ):  # agent move out of boundary
+        ):  # agent move out of the boundary
             self.agent.setPosition(savedPos[0], savedPos[1])
             newRow, newColumn = self.agent.getPosition()
             reward -= 50
@@ -176,9 +201,13 @@ class GridWorldEnv(gym.Env):
         elif value == GridCellType.PARTIAL_EXPLORED.value:
             reward += 2
 
-        self.updateGrid(
-            self.environment.gridMap, self.agent.row, self.agent.column, self.agent
-        )
+        # Other agents move in random manner
+        for agent in self.agents:
+            agent.gainVisionInformation(self.environment.gridMap)
+            agent.move([self.agent] + self.agents)
+
+        for agent in [self.agent] + self.agents:
+            self.updateGrid(self.environment.gridMap, agent)
 
         if self.environment.isFullyExplored():
             reward += 100
@@ -190,33 +219,30 @@ class GridWorldEnv(gym.Env):
 
         return observation, reward, terminated, False
 
-    def updateGrid(self, gridMap, newRow, newColumn, agent):
-        # Update explored cell on gridMap
-        if gridMap[newRow, newColumn] != GridCellType.WALL.value:
-            gridMap[newRow, newColumn] = GridCellType.EXPLORED.value
-
+    def updateGrid(self, gridMap, agent):
         # Update partially explored cell on gridMap
-        visionShapeRow, visionShapeColumn = (
-            agent.vision.shape[0],
-            agent.vision.shape[1],
+        halfVisionRow, halfVisionColumn = (
+            int(agent.vision.shape[0] // 2),  # vision shape row
+            int(agent.vision.shape[1] // 2),  # vision shape column
         )
-        for r in range(visionShapeRow):
-            for c in range(visionShapeColumn):
-                targetRow = newRow + r - int(visionShapeRow // 2)
-                targetColumn = newColumn + c - int(visionShapeColumn // 2)
 
-                if (
-                    targetRow < 0
-                    or targetRow >= self.environment.gridMap.shape[0]
-                    or targetColumn < 0
-                    or targetColumn >= self.environment.gridMap.shape[1]
-                ):  # target row, column are within map
-                    continue
+        topRow = agent.row - halfVisionRow
+        bottomRow = agent.row + halfVisionRow + 1
+        leftColumn = agent.column - halfVisionColumn
+        rightColumn = agent.column + halfVisionColumn + 1
 
-                if gridMap[targetRow, targetColumn] == GridCellType.UNEXPLORED.value:
-                    gridMap[targetRow, targetColumn] = (
-                        GridCellType.PARTIAL_EXPLORED.value
-                    )
+        visionGrid = gridMap[topRow:bottomRow, leftColumn:rightColumn]
+        visionGrid[visionGrid == GridCellType.UNEXPLORED.value] = (
+            GridCellType.PARTIAL_EXPLORED.value
+        )
+
+        gridMap[topRow:bottomRow, leftColumn:rightColumn] = visionGrid
+
+        # Update explored cell on gridMap
+        if gridMap[agent.row, agent.column] != GridCellType.WALL.value:
+            gridMap[agent.row, agent.column] = GridCellType.EXPLORED.value
+
+        self.localMap[topRow:bottomRow, leftColumn:rightColumn] = visionGrid
 
     def render(self):
         """Render the environment."""
@@ -229,16 +255,3 @@ class GridWorldEnv(gym.Env):
             grid[agent.getPosition()] = "a"  # Label other agents
 
         print("\n".join([" ".join(row) for row in grid]) + "\n")
-
-
-from gym.envs.registration import register
-
-
-if __name__ == "__main__":
-    print("regist env")
-
-    register(
-        id="gym_examples/GridWorld-v0",
-        entry_point="gym_examples.envs:GridWorldEnv",
-        max_episode_steps=20,
-    )

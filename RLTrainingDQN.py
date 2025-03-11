@@ -10,6 +10,9 @@ from RLEnv import GridWorldEnv
 from constants.layoutType import LayoutType
 from constants.moveType import MoveType
 
+from brain.brainWandering import BrainWandering
+
+
 # Modification of Deep Q-learning by pytorch from
 # https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
 
@@ -51,17 +54,18 @@ class ReplayMemory:
 
 
 def preprocess_observation(obs):
-    full_map = obs["full_map"].flatten()
-    # agent_pos = obs["agent_positions"].flatten()
-    return np.concatenate(
-        (
-            full_map,
-            # agent_pos
-        )
-    )
+    position = obs["position"]
+    vision = obs["vision"].flatten()
+    localmap = obs["local_map"].flatten()
+    return np.concatenate((position, vision, localmap))
 
 
-def train(env: GridWorldEnv, num_episodes=1000):
+def train(
+    env: GridWorldEnv,
+    policy_net: DQN,
+    num_episodes=1000,
+    canTerminated=False,
+):
     # if GPU is to be used
     device = torch.device(
         "cuda"
@@ -88,20 +92,24 @@ def train(env: GridWorldEnv, num_episodes=1000):
     size_actions = len(n_actions)
     state_dim = preprocess_observation(env.reset()).shape[0]
 
-    policy_net = DQN(state_dim, size_actions).to(device)
     target_net = DQN(state_dim, size_actions).to(device)
     target_net.load_state_dict(policy_net.state_dict())
 
     optimizer = torch.optim.Adam(policy_net.parameters(), lr=LR, amsgrad=True)
     buffer = ReplayMemory(10000)
 
+    # Point to terminate episode
+    terminatePoint = env.environment.gridMap.size * 2
+
     for episode in range(num_episodes):
         obs = env.reset()
         state = preprocess_observation(obs)
         total_reward = 0
 
+        count = 0
+        terminated = False
         done = False
-        while not done:
+        while not done and not terminated:
             # ε-greedy action selection
             if np.random.rand() < EPS_START:
                 action = np.random.choice(n_actions)
@@ -119,7 +127,12 @@ def train(env: GridWorldEnv, num_episodes=1000):
             state = next_state
             total_reward += reward
 
-            env.render()
+            if canTerminated:
+                count += 1
+                if count >= terminatePoint:
+                    terminated = True
+
+            # env.render()
 
             # Training step
             if len(buffer) >= BATCH_SIZE:
@@ -148,30 +161,34 @@ def train(env: GridWorldEnv, num_episodes=1000):
         if episode % TARGET_UPDATE_RATE == 0:
             target_net.load_state_dict(policy_net.state_dict())
 
-        print(f"Episode {episode+1}, Reward: {total_reward}, Epsilon: {EPS_START:.3f}")
+        print(
+            f"Episode {episode+1}, Total Reward: {total_reward}, Epsilon: {EPS_START:.3f}"
+        )
 
     torch.save(policy_net.state_dict(), "dqn_model.pt")
     print("Complete")
 
 
 if __name__ == "__main__":
-    # Define custom environment
-    environment = Environment(LayoutType.TEST)
-    env = GridWorldEnv(
-        environment=environment,
-        agent=Agent("A0", environment.cellSize),
-        agents=[],
-    )
+    trainingLayout = [LayoutType.RL_PLAIN, LayoutType.RL_OBSTACLES, LayoutType.RL_MAZE]
 
-    # Training process
-    train(env)
+    policy: DQN
 
-    # Example of using trained model
-    # TODO: remove this
-    # n_actions = [type.value for type in MoveType]
-    # size_actions = len(n_actions)
-    # state_dim = preprocess_observation(env.reset()).shape[0]
+    for layout in trainingLayout:
+        # Define custom environment
+        environment = Environment(layout)
+        agent = Agent("A0", environment.cellSize)
+        # friend = Agent("A1", environment.cellSize)
+        # friend.setBrain(BrainWandering(friend))
 
-    # policy_net = DQN(state_dim, size_actions)
-    # policy_net.load_state_dict(torch.load("dqn_model.pt", weights_only=True))
-    # policy_net.eval()
+        env = GridWorldEnv(
+            environment=environment,
+            agent=agent,
+            agents=[],
+        )
+
+        state_dim = preprocess_observation(env.reset()).shape[0]
+        policy = DQN(state_dim, len([type.value for type in MoveType]))
+
+        # Training process
+        train(env, policy)
