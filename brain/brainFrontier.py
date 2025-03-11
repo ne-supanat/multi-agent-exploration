@@ -28,18 +28,23 @@ class BrainFrontier(Brain):
         availableMoves = self.checkAvailableMoves(vision, agents)
 
         # print(self.localMap.map)
+        if self.agent.name in self.localMap.blackboard:
+            self.targetCell = self.localMap.blackboard[self.agent.name]
 
         # Find new target cell
         # if agent on target cell position or
         # target cell already got explored (not in fronteir anymore)
-        if (self.localRow, self.localColumn) == self.targetCell or (
-            not self.targetCell in self.localMap.frontiers
+        if (
+            (self.localRow, self.localColumn) == self.targetCell
+            or (not self.targetCell in self.localMap.frontiers)
+            or self.targetCell == None
         ):
             self.targetCell = None
             self.findNewTargetCell()
 
         # if stuck for too long (3 turns) give up on task
         if self.targetCell and self.stuck > 2:
+            self.stuck = 0
             self.localMap.giveUpOnTask(self.targetCell)
             return MoveType.STAY
 
@@ -139,15 +144,11 @@ class BrainFrontier(Brain):
     def findNewTargetCell(self):
         # Find the closest cell from frontier list
         if len(self.localMap.frontiers) > 0:
-            closestFronteir = None
+            closestFrontier = None
             closestDistance = float("inf")
 
-            for fronteir in self.localMap.frontiers:
-                # Prevent duplicated assigned fronteir
-                if fronteir in self.localMap.blackboard:
-                    continue
-
-                fronteirRow, fronteirColumn = fronteir
+            for frontier in self.localMap.frontiers:
+                fronteirRow, fronteirColumn = frontier
 
                 distance = abs(fronteirRow - self.localRow) + abs(
                     fronteirColumn - self.localColumn
@@ -155,13 +156,18 @@ class BrainFrontier(Brain):
 
                 if distance < closestDistance:
                     closestDistance = distance
-                    closestFronteir = fronteir
+                    closestFrontier = frontier
 
-            self.targetCell = closestFronteir
+            self.targetCell = closestFrontier
             self.planNewPath()
 
+            # Unassign from other agent
+            for agent in self.localMap.blackboard:
+                if self.targetCell == self.localMap.blackboard[agent]:
+                    self.localMap.blackboard[agent] = None
+
             # Update assigned fronteir on shared blackboard
-            self.localMap.blackboard[self.targetCell] = self.agent.name
+            self.localMap.blackboard[self.agent.name] = self.targetCell
 
     def planNewPath(self):
         self.queue.clear()
