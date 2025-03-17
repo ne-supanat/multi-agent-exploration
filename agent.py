@@ -48,9 +48,9 @@ class Agent:
         return self.column, self.row
 
     def gainVisionInformation(self, gridMap):
-        for r in range(self.vision.shape[0]):
-            for c in range(self.vision.shape[1]):
-                self.vision[r, c] = gridMap[self.row + r - 1, self.column + c - 1]
+        self.vision = gridMap[
+            self.row - 1 : self.row + 2, self.column - 1 : self.column + 2
+        ]  # 3x3 shape
 
     # Handle movement
     def move(self, agents):

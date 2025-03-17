@@ -1,17 +1,37 @@
+import numpy as np
+
 from constants.gridCellType import GridCellType
 from constants.behaviourType import BehaviourType
 from constants.moveType import MoveType
 
+from centralMemory import CentralMemory
+
 
 class Brain:
 
-    def __init__(self, agentp):
+    def __init__(self, agentp, layoutShape):
         self.agent = agentp
+        self.localMap = np.full(layoutShape, GridCellType.UNEXPLORED.value, dtype=int)
+        self.visitedMap = np.zeros(layoutShape, dtype=int)
 
     # Decide what should be the next move
     def thinkAndAct(self, vision, agents: list) -> MoveType:
+        self.updateVisittedMap()
+        self.gainInfoFromVision(vision)
         availableMoves = self.checkAvailableMoves(vision, agents)
+
         return self.thinkBehavior(availableMoves)
+
+    def updateVisittedMap(self):
+        self.visitedMap[self.agent.row, self.agent.column] = (
+            self.visitedMap[self.agent.row, self.agent.column] + 1
+        )
+
+    def gainInfoFromVision(self, vision):
+        self.localMap[
+            self.agent.row - 1 : self.agent.row + 2,
+            self.agent.column - 1 : self.agent.column + 2,
+        ] = vision
 
     def checkAvailableMoves(self, vision, agents: list) -> MoveType:
         # All move type are available at first step

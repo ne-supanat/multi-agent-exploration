@@ -107,7 +107,7 @@ class Experiment:
             )
 
             if behaviourType == BehaviourType.WANDERING:
-                brain = BrainWandering(agent)
+                brain = BrainWandering(agent, environment.gridMap.shape)
             elif behaviourType == BehaviourType.GREEDY:
                 brain = BrainGreedy(agent)
             elif behaviourType == BehaviourType.FRONTIER:
@@ -206,8 +206,8 @@ if __name__ == "__main__":
     exp = Experiment()
     print(
         exp.runOnce(
-            BehaviourType.FRONTIER,
-            LayoutType.OBSTACLES,
+            BehaviourType.WANDERING,
+            LayoutType.PLAIN,
             noOfAgents=2,
             shareKnowledge=True,
         )
