@@ -101,7 +101,6 @@ class Experiment:
                     spawnPositions.append((r, c))
 
         spawnPositions = random.sample(spawnPositions, noOfAgents)
-        spawnPositions = [(8, 6)]
 
         if behaviourType in [
             BehaviourType.FRONTIER,
@@ -111,8 +110,8 @@ class Experiment:
         ]:
             sharedMemory = SharedMemory(environment.gridSize)
 
-        # if behaviourType in [BehaviourType.FRONTIER_CENTRAL_FIFO]:
-        #     centralNode = CentralNode(agents, sharedMemory)
+        if behaviourType == BehaviourType.FRONTIER_CENTRAL_FIFO:
+            centralNode = CentralNodeFIFO(agents, sharedMemory)
 
         layoutShape = environment.gridMap.shape
 
@@ -131,14 +130,15 @@ class Experiment:
             elif behaviourType == BehaviourType.FRONTIER:
                 brain = BrainFrontier(agent, layoutShape, sharedMemory)
             elif behaviourType == BehaviourType.FRONTIER_CENTRAL_FIFO:
-                centralNode = CentralNodeFIFO(agents, sharedMemory)
                 brain = BrainFrontierCentralised(
                     agent, layoutShape, sharedMemory, centralNode
                 )
             elif behaviourType == BehaviourType.GREEDY_FRONTIER:
                 brainGreedy = BrainGreedy(agent, layoutShape)
-                brainFrontier = BrainFrontier(agent, sharedMemory)
-                brain = BrainGreedyFrontier(agent, brainGreedy, brainFrontier)
+                brainFrontier = BrainFrontier(agent, layoutShape, sharedMemory)
+                brain = BrainGreedyFrontier(
+                    agent, layoutShape, brainGreedy, brainFrontier
+                )
             # elif behaviourType == BehaviourType.REINFORCEMENT:
             #     # not sharing knowledge: each agent have its own version of central map
             #     if not shareKnowledge:
@@ -213,8 +213,8 @@ if __name__ == "__main__":
     exp = Experiment()
     print(
         exp.runOnce(
-            BehaviourType.FRONTIER_CENTRAL_FIFO,
+            BehaviourType.GREEDY_FRONTIER,
             LayoutType.MAZE,
-            noOfAgents=1,
+            noOfAgents=2,
         )
     )

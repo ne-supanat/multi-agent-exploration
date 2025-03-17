@@ -1,11 +1,12 @@
 from brain.centralNode import CentralNode
 
 
-class CentralNodeFIFO(CentralNode):
-    # Central FIFO planing: assign target based on order added to frontier (First in First out)
+class CentralNodeGreedy(CentralNode):
+    # Central greedy planing: assign frontier to closest agent
     def plan(self):
         while self.sharedMemory.frontiers:
             for agent in self.agents:
+                # Assign target based on order added to frontier (First in First out)
                 self.agentsTargetQueue[agent.name].append(
                     self.sharedMemory.frontiers.pop(0)
                 )

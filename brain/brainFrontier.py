@@ -21,8 +21,7 @@ class BrainFrontier(Brain):
     def thinkBehavior(self, vision, agents: list) -> MoveType:
         # Reach target cell
         if self.agent.getPosition() == self.targetCell:
-            self.sharedMemory.completeTask(self.agent.name)
-            self.targetCell = None
+            self.sendCompleteTask()
 
         # Remove current position from frontier list
         if self.agent.getPosition() in self.sharedMemory.frontiers:
@@ -42,10 +41,22 @@ class BrainFrontier(Brain):
 
         return bestMove
 
+    def sendCompleteTask(self):
+        self.sharedMemory.completeTask(self.agent.name)
+        self.targetCell = None
+
     def findBestMove(self):
         # Recall & check self target cell with blackboard
         if self.agent.name in self.sharedMemory.blackboard:
             self.targetCell = self.sharedMemory.blackboard[self.agent.name]
+
+        # Handle case target cell already got explored by other agent
+        # send event similar to completed by itself
+        if self.targetCell and (
+            self.localMap[self.targetCell[0], self.targetCell[1]]
+            == GridCellType.EXPLORED.value
+        ):
+            self.sendCompleteTask()
 
         # Find new target cell
         # if currently not have one
@@ -109,6 +120,8 @@ class BrainFrontier(Brain):
 
             # update blackboard with target frontier on agent name
             self.sharedMemory.signUpOnTask(self.agent.name, self.targetCell)
+        else:
+            self.planNewPath()
 
     def planNewPath(self):
         self.queue.clear()
