@@ -4,7 +4,7 @@ from constants.gridCellType import GridCellType
 from constants.behaviourType import BehaviourType
 from constants.moveType import MoveType
 
-from centralMemory import CentralMemory
+from sharedMemory import SharedMemory
 
 
 class Brain:

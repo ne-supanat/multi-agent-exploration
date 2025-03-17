@@ -10,12 +10,12 @@ from environment import Environment
 from RLTrainingDQN import DQN
 from RLTrainingPG import PolicyNetwork
 from constants.gridCellType import GridCellType
-from centralMemory import CentralMemory
+from sharedMemory import SharedMemory
 
 
 class BrainRL(Brain):
     def __init__(
-        self, agentp, environment: Environment, centralMemory: CentralMemory = None
+        self, agentp, environment: Environment, centralMemory: SharedMemory = None
     ):
         self.agent = agentp
         self.environment = environment

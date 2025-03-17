@@ -6,7 +6,7 @@ from environment import Environment
 from agent import Agent, Brain
 from ticker import Ticker
 from counter import Counter
-from centralMemory import CentralMemory
+from sharedMemory import SharedMemory
 
 from constants.behaviourType import BehaviourType
 from constants.layoutType import LayoutType
@@ -96,7 +96,7 @@ class Experiment:
             BehaviourType.GREEDY_FRONTIER,
             BehaviourType.REINFORCEMENT,
         ]:
-            centralMap = CentralMemory(environment.gridSize[0], environment.gridSize[1])
+            centralMap = SharedMemory(environment.gridSize[0], environment.gridSize[1])
 
         layoutShape = environment.gridMap.shape
 
@@ -116,7 +116,7 @@ class Experiment:
                 # not sharing knowledge: each agent have its own version of central map
                 if not shareKnowledge:
                     centralMap = copy.deepcopy(centralMap)
-                brain = BrainFrontier(agent, centralMap)
+                brain = BrainFrontier(agent, layoutShape, centralMap)
             elif behaviourType == BehaviourType.GREEDY_FRONTIER:
                 # not sharing knowledge: each agent have its own version of central map
                 if not shareKnowledge:
@@ -208,7 +208,7 @@ if __name__ == "__main__":
     exp = Experiment()
     print(
         exp.runOnce(
-            BehaviourType.GREEDY,
+            BehaviourType.FRONTIER,
             LayoutType.MAZE,
             noOfAgents=2,
             shareKnowledge=True,
