@@ -7,6 +7,8 @@ from agent import Agent, Brain
 from ticker import Ticker
 from counter import Counter
 from sharedMemory import SharedMemory
+from brain.centralNode import CentralNode
+from brain.centralNodeFIFO import CentralNodeFIFO
 
 from constants.behaviourType import BehaviourType
 from constants.layoutType import LayoutType
@@ -17,6 +19,7 @@ import environment as environment
 from brain.brainWandering import BrainWandering
 from brain.brainGreedy import BrainGreedy
 from brain.brainFrontier import BrainFrontier
+from brain.brainFrontierCentralised import BrainFrontierCentralised
 from brain.brainGreedyFrontier import BrainGreedyFrontier
 from brain.brainRL import BrainRL
 
@@ -33,10 +36,11 @@ class Experiment:
         behaviourType: BehaviourType,
         layoutType: LayoutType,
         noOfAgents: int = 1,
-        shareKnowledge=True,
     ):
         window = tk.Tk()
         window.resizable(False, False)
+        window.lift()
+        window.focus_force()
 
         # Setup environment
         environment = Environment(layoutType)
@@ -44,20 +48,27 @@ class Experiment:
         canvas.pack()
         canvas.focus_set()
 
+        # Create central node
+        # TODO: CentralNode with behaviour type (function)
+        # FIFO, LIFO
+        # greedy/hungarian
+        # clustering
+        centralNode = CentralNode([], None)
+
         # Spawn agents
         agents = self.createAgents(
             canvas,
             noOfAgents,
             behaviourType,
             environment.cellSize,
-            shareKnowledge,
             environment,
+            centralNode,
         )
 
         # Update grid map for initial stage
         gridMap = environment.gridMap
         for agent in agents:
-            self.updateGrid(gridMap, agent.row, agent.column, agent)
+            self.updateGrid(gridMap, agent.row, agent.column)
 
         environment.drawGrid(canvas)
 
@@ -78,8 +89,8 @@ class Experiment:
         noOfAgents: int,
         behaviourType: BehaviourType,
         cellSize: int,
-        shareKnowledge: bool,
         environment: Environment = None,
+        centralNode: CentralNode = None,
     ):
         agents = []
         spawnPositions = []
@@ -90,13 +101,18 @@ class Experiment:
                     spawnPositions.append((r, c))
 
         spawnPositions = random.sample(spawnPositions, noOfAgents)
+        spawnPositions = [(8, 6)]
 
         if behaviourType in [
             BehaviourType.FRONTIER,
+            BehaviourType.FRONTIER_CENTRAL_FIFO,
             BehaviourType.GREEDY_FRONTIER,
             BehaviourType.REINFORCEMENT,
         ]:
-            centralMap = SharedMemory(environment.gridSize[0], environment.gridSize[1])
+            sharedMemory = SharedMemory(environment.gridSize)
+
+        # if behaviourType in [BehaviourType.FRONTIER_CENTRAL_FIFO]:
+        #     centralNode = CentralNode(agents, sharedMemory)
 
         layoutShape = environment.gridMap.shape
 
@@ -113,16 +129,15 @@ class Experiment:
             elif behaviourType == BehaviourType.GREEDY:
                 brain = BrainGreedy(agent, layoutShape)
             elif behaviourType == BehaviourType.FRONTIER:
-                # not sharing knowledge: each agent have its own version of central map
-                if not shareKnowledge:
-                    centralMap = copy.deepcopy(centralMap)
-                brain = BrainFrontier(agent, layoutShape, centralMap)
+                brain = BrainFrontier(agent, layoutShape, sharedMemory)
+            elif behaviourType == BehaviourType.FRONTIER_CENTRAL_FIFO:
+                centralNode = CentralNodeFIFO(agents, sharedMemory)
+                brain = BrainFrontierCentralised(
+                    agent, layoutShape, sharedMemory, centralNode
+                )
             elif behaviourType == BehaviourType.GREEDY_FRONTIER:
-                # not sharing knowledge: each agent have its own version of central map
-                if not shareKnowledge:
-                    centralMap = copy.deepcopy(centralMap)
                 brainGreedy = BrainGreedy(agent, layoutShape)
-                brainFrontier = BrainFrontier(agent, centralMap)
+                brainFrontier = BrainFrontier(agent, sharedMemory)
                 brain = BrainGreedyFrontier(agent, brainGreedy, brainFrontier)
             # elif behaviourType == BehaviourType.REINFORCEMENT:
             #     # not sharing knowledge: each agent have its own version of central map
@@ -156,7 +171,7 @@ class Experiment:
             if gridMap[newRow, newColumn] != GridCellType.EXPLORED.value:
                 counter.explored(canvas)
 
-            self.updateGrid(gridMap, newRow, newColumn, agent)
+            self.updateGrid(gridMap, newRow, newColumn)
 
         environment.drawGrid(canvas)
 
@@ -180,24 +195,14 @@ class Experiment:
             window,
         )
 
-    def updateGrid(self, gridMap, newRow, newColumn, agent):
+    def updateGrid(self, gridMap, newRow, newColumn):
         # Update partially explored cell on gridMap
-        halfVisionRow, halfVisionColumn = (
-            int(agent.vision.shape[0] // 2),  # vision shape row
-            int(agent.vision.shape[1] // 2),  # vision shape column
-        )
-
-        topRow = newRow - halfVisionRow
-        bottomRow = newRow + halfVisionRow + 1
-        leftColumn = newColumn - halfVisionColumn
-        rightColumn = newColumn + halfVisionColumn + 1
-
-        visionGrid = gridMap[topRow:bottomRow, leftColumn:rightColumn]
+        visionGrid = gridMap[newRow - 1 : newRow + 2, newColumn - 1 : newColumn + 2]
         visionGrid[visionGrid == GridCellType.UNEXPLORED.value] = (
             GridCellType.PARTIAL_EXPLORED.value
         )
 
-        gridMap[topRow:bottomRow, leftColumn:rightColumn] = visionGrid
+        gridMap[newRow - 1 : newRow + 2, newColumn - 1 : newColumn + 2] = visionGrid
 
         # Update explored cell on gridMap
         if gridMap[newRow, newColumn] != GridCellType.WALL.value:
@@ -208,9 +213,8 @@ if __name__ == "__main__":
     exp = Experiment()
     print(
         exp.runOnce(
-            BehaviourType.FRONTIER,
+            BehaviourType.FRONTIER_CENTRAL_FIFO,
             LayoutType.MAZE,
-            noOfAgents=2,
-            shareKnowledge=True,
+            noOfAgents=1,
         )
     )

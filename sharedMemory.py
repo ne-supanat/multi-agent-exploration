@@ -3,10 +3,8 @@ from constants.gridCellType import GridCellType
 
 
 class SharedMemory:
-    def __init__(self, sizeRow, sizeColumn):
-        self.map = np.full(
-            (sizeRow, sizeColumn), GridCellType.UNEXPLORED.value, dtype=int
-        )
+    def __init__(self, shape):
+        self.map = np.full(shape, GridCellType.UNEXPLORED.value, dtype=int)
         self.frontiers = []
         self.blackboard = {}  # in format of (cell_row, cell_column): agent_name
 
@@ -14,10 +12,11 @@ class SharedMemory:
         self.map[row, column] = value
 
     def addFrontier(self, pos):
-        self.frontiers.insert(0, pos)
+        self.frontiers.append(pos)
 
     def removeFrontier(self, pos):
-        self.frontiers.remove(pos)
+        if pos in self.frontiers:
+            self.frontiers.remove(pos)
 
     def signUpOnTask(self, agentName, targetCell):
         self.removeFrontier(targetCell)
