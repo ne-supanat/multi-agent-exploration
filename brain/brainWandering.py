@@ -7,5 +7,5 @@ from brain.brain import Brain
 
 class BrainWandering(Brain):
     # Wandering behavior thinking: randomly move
-    def thinkBehavior(self, availableMoves) -> MoveType:
-        return random.choice(list(availableMoves))
+    def thinkBehavior(self, vision, agents) -> MoveType:
+        return random.choice(list(self.availableMoves))

@@ -13,20 +13,23 @@ class Brain:
         self.agent = agentp
         self.localMap = np.full(layoutShape, GridCellType.UNEXPLORED.value, dtype=int)
         self.visitedMap = np.zeros(layoutShape, dtype=int)
+        self.availableMoves = []
 
     # Decide what should be the next move
     def thinkAndAct(self, vision, agents: list) -> MoveType:
         self.updateVisittedMap()
         self.gainInfoFromVision(vision)
-        availableMoves = self.checkAvailableMoves(vision, agents)
+        self.checkAvailableMoves(vision, agents)
 
-        return self.thinkBehavior(availableMoves)
+        return self.thinkBehavior(vision, agents)
 
+    # Update how many time visited this cell
     def updateVisittedMap(self):
         self.visitedMap[self.agent.row, self.agent.column] = (
             self.visitedMap[self.agent.row, self.agent.column] + 1
         )
 
+    # Update local map
     def gainInfoFromVision(self, vision):
         self.localMap[
             self.agent.row - 1 : self.agent.row + 2,
@@ -42,7 +45,7 @@ class Brain:
         availableMoves = self.checkWalls(availableMoves, vision)
         availableMoves = self.checkAgents(availableMoves, agents)
 
-        return availableMoves
+        self.availableMoves = availableMoves
 
     def checkWalls(self, availableMoves: set[MoveType], vision) -> set[MoveType]:
         if vision[0][1] == GridCellType.WALL.value:  # check top postition
@@ -76,5 +79,5 @@ class Brain:
         return availableMoves
 
     # Behavior thinking: depends on behaviour type
-    def thinkBehavior(self, availableMoves) -> MoveType:
+    def thinkBehavior(self, vision, agents) -> MoveType:
         pass

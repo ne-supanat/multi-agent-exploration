@@ -7,13 +7,9 @@ from brain.brain import Brain
 
 
 class BrainGreedy(Brain):
-    # Decide what should be the next move
-    def thinkAndAct(self, vision, agents: list) -> MoveType:
-        availableMoves = self.checkAvailableMoves(vision, agents)
-        return self.thinkBehavior(vision, availableMoves)
 
     # Greedy behavior thinking: purely react to vision-based information, moving toward the closest cell
-    def thinkBehavior(self, vision, availableMoves) -> MoveType:
+    def thinkBehavior(self, vision, agents) -> MoveType:
         # First priority: adjacent cell
         priorityMoves = [
             (MoveType.UP, vision[0][1]),  #  Top
@@ -23,7 +19,10 @@ class BrainGreedy(Brain):
         ]
 
         for move, cell in priorityMoves:
-            if move in availableMoves and cell == GridCellType.PARTIAL_EXPLORED.value:
+            if (
+                move in self.availableMoves
+                and cell == GridCellType.PARTIAL_EXPLORED.value
+            ):
                 return move
 
         # Second priority: corner cell
@@ -36,10 +35,10 @@ class BrainGreedy(Brain):
 
         for moveOption1, moveOption2, cell in cornerMoves:
             if cell == GridCellType.PARTIAL_EXPLORED.value:
-                if moveOption1 in availableMoves:
+                if moveOption1 in self.availableMoves:
                     return moveOption1
-                elif moveOption2 in availableMoves:
+                elif moveOption2 in self.availableMoves:
                     return moveOption2
 
         # No visible partially explored cell then random move
-        return random.choice(list(availableMoves))
+        return random.choice(list(self.availableMoves))

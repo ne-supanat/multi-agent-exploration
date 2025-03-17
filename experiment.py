@@ -98,6 +98,8 @@ class Experiment:
         ]:
             centralMap = CentralMemory(environment.gridSize[0], environment.gridSize[1])
 
+        layoutShape = environment.gridMap.shape
+
         # Spawn agents
         for i in range(noOfAgents):
             agent = Agent(f"A{i}", cellSize)
@@ -107,9 +109,9 @@ class Experiment:
             )
 
             if behaviourType == BehaviourType.WANDERING:
-                brain = BrainWandering(agent, environment.gridMap.shape)
+                brain = BrainWandering(agent, layoutShape)
             elif behaviourType == BehaviourType.GREEDY:
-                brain = BrainGreedy(agent)
+                brain = BrainGreedy(agent, layoutShape)
             elif behaviourType == BehaviourType.FRONTIER:
                 # not sharing knowledge: each agent have its own version of central map
                 if not shareKnowledge:
@@ -119,16 +121,16 @@ class Experiment:
                 # not sharing knowledge: each agent have its own version of central map
                 if not shareKnowledge:
                     centralMap = copy.deepcopy(centralMap)
-                brainGreedy = BrainGreedy(agent)
+                brainGreedy = BrainGreedy(agent, layoutShape)
                 brainFrontier = BrainFrontier(agent, centralMap)
                 brain = BrainGreedyFrontier(agent, brainGreedy, brainFrontier)
-            elif behaviourType == BehaviourType.REINFORCEMENT:
-                # not sharing knowledge: each agent have its own version of central map
-                if not shareKnowledge:
-                    centralMap = copy.deepcopy(centralMap)
-                brain = BrainRL(agent, environment, centralMap)
+            # elif behaviourType == BehaviourType.REINFORCEMENT:
+            #     # not sharing knowledge: each agent have its own version of central map
+            #     if not shareKnowledge:
+            #         centralMap = copy.deepcopy(centralMap)
+            #     brain = BrainRL(agent, environment, centralMap)
             else:
-                brain = Brain(agent)
+                brain = Brain(agent, layoutShape)
             agent.setBrain(brain)
 
             agents.append(agent)
@@ -206,8 +208,8 @@ if __name__ == "__main__":
     exp = Experiment()
     print(
         exp.runOnce(
-            BehaviourType.WANDERING,
-            LayoutType.PLAIN,
+            BehaviourType.GREEDY,
+            LayoutType.MAZE,
             noOfAgents=2,
             shareKnowledge=True,
         )
