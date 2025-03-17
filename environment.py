@@ -7,6 +7,8 @@ from imageToArray import imageToArray
 
 # Modification of university of nottingham COMP4105 24-25 module's material
 
+# TODO: generate randome map with connected open area?
+
 
 class Environment:
     def __init__(self, layoutType: LayoutType = None):
@@ -15,7 +17,8 @@ class Environment:
         self.gridMap = np.full((0, 0), GridCellType.UNEXPLORED.value, dtype=int)
         self.layoutType = layoutType
 
-        self.setupLayout(layoutType)
+        if layoutType != None:
+            self.setupLayout(layoutType)
 
     def reset(self):
         self.setupLayout(self.layoutType)
@@ -36,12 +39,20 @@ class Environment:
             layout = self.setupLayoutDonutShape()
         elif layoutType == LayoutType.ROOM:
             layout = self.setupLayoutRoom()
+        elif layoutType == LayoutType.RL_PLAIN_SSM:
+            layout = self.setupLayoutRLPlainSSM()
+        elif layoutType == LayoutType.RL_PLAIN_SM:
+            layout = self.setupLayoutRLPlainSM()
         elif layoutType == LayoutType.RL_PLAIN:
             layout = self.setupLayoutRLPlain()
         elif layoutType == LayoutType.RL_OBSTACLES:
             layout = self.setupLayoutRLObstacles()
         elif layoutType == LayoutType.RL_MAZE:
             layout = self.setupLayoutRLMaze()
+        else:
+            self.gridMap = np.full(
+                self.gridSize, GridCellType.UNEXPLORED.value, dtype=int
+            )
 
         self.createBoundary()
         return layout
@@ -76,6 +87,14 @@ class Environment:
     def setupLayoutRoom(self):
         self.gridSize = (25, 25)  # row, column
         self.gridMap = imageToArray("cw/images/exp_room.png", 25, 25)
+
+    def setupLayoutRLPlainSSM(self):
+        self.gridSize = (5, 5)  # row, column
+        self.gridMap = imageToArray("cw/images/rl_plain_ssm.png", 5, 5)
+
+    def setupLayoutRLPlainSM(self):
+        self.gridSize = (10, 10)  # row, column
+        self.gridMap = imageToArray("cw/images/rl_plain_sm.png", 10, 10)
 
     def setupLayoutRLPlain(self):
         self.gridSize = (20, 20)  # row, column

@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+import os
+import copy
 
 from agent import Agent
 from environment import Environment
@@ -64,7 +66,7 @@ def train(
     env: GridWorldEnv,
     policy_net: DQN,
     num_episodes=1000,
-    canTerminated=False,
+    canTerminated=True,
 ):
     # if GPU is to be used
     device = torch.device(
@@ -99,7 +101,8 @@ def train(
     buffer = ReplayMemory(10000)
 
     # Point to terminate episode
-    terminatePoint = env.environment.gridMap.size * 2
+    # terminatePoint = env.environment.gridMap.size * 2
+    terminatePoint = 100000
 
     for episode in range(num_episodes):
         obs = env.reset()
@@ -109,6 +112,7 @@ def train(
         count = 0
         terminated = False
         done = False
+
         while not done and not terminated:
             # ε-greedy action selection
             if np.random.rand() < EPS_START:
@@ -161,22 +165,67 @@ def train(
         if episode % TARGET_UPDATE_RATE == 0:
             target_net.load_state_dict(policy_net.state_dict())
 
+        torch.save(policy_net.state_dict(), "cw/rlModel/dqn_model.pt")
         print(
-            f"Episode {episode+1}, Total Reward: {total_reward}, Epsilon: {EPS_START:.3f}"
+            f"Episode {episode+1}, Total Reward: {total_reward}, Epsilon: {EPS_START:.3f}, Move: {count}"
         )
 
-    torch.save(policy_net.state_dict(), "dqn_model.pt")
+        f = open("cw/rlModel/dqn_log.txt", "a")
+        f.write(
+            f"Episode {episode+1}, Total Reward: {total_reward}, Epsilon: {EPS_START:.3f}, Move: {count}\n"
+        )
+        f.close()
+
     print("Complete")
 
 
 if __name__ == "__main__":
-    trainingLayout = [LayoutType.RL_PLAIN, LayoutType.RL_OBSTACLES, LayoutType.RL_MAZE]
+    # fixing problem: OMP: Error #15: Initializing libomp.dylib, but found libiomp5.dylib already initialized.
+    # https://stackoverflow.com/questions/53014306/error-15-initializing-libiomp5-dylib-but-found-libiomp5-dylib-already-initial
+    os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
+
+    # trainingLayout = [
+    #     LayoutType.RL_PLAIN_SSM,
+    #     LayoutType.RL_PLAIN_SM,
+    #     LayoutType.RL_PLAIN,
+    #     LayoutType.RL_OBSTACLES,
+    #     LayoutType.RL_MAZE,
+    # ]
+
+    # policy: DQN
+
+    # for layout in trainingLayout:
+    #     # Define custom environment
+    #     environment = Environment(layout)
+    #     agent = Agent("A0", environment.cellSize)
+    #     # friend = Agent("A1", environment.cellSize)
+    #     # friend.setBrain(BrainWandering(friend))
+
+    #     env = GridWorldEnv(
+    #         environment=environment,
+    #         agent=agent,
+    #         agents=[],
+    #     )
+
+    #     state_dim = preprocess_observation(env.reset()).shape[0]
+    #     policy = DQN(state_dim, len([type.value for type in MoveType]))
+    #     policy.load_state_dict(torch.load("cw/rlModel/dqn_model.pt", weights_only=True))
+
+    #     # Training process
+    #     train(env, policy)
+
+    baseEnvironment = Environment(None)
 
     policy: DQN
 
-    for layout in trainingLayout:
+    for size in range(10, 15 + 1):
         # Define custom environment
-        environment = Environment(layout)
+
+        baseEnvironment.gridSize = (size, size)
+        baseEnvironment.gridMap = np.full((size, size), 2, dtype=int)
+        baseEnvironment.createBoundary()
+
+        environment = copy.deepcopy(baseEnvironment)
         agent = Agent("A0", environment.cellSize)
         # friend = Agent("A1", environment.cellSize)
         # friend.setBrain(BrainWandering(friend))
@@ -189,6 +238,10 @@ if __name__ == "__main__":
 
         state_dim = preprocess_observation(env.reset()).shape[0]
         policy = DQN(state_dim, len([type.value for type in MoveType]))
+        if size != 10:
+            policy.load_state_dict(
+                torch.load("cw/rlModel/dqn_model.pt", weights_only=True)
+            )
 
         # Training process
         train(env, policy)

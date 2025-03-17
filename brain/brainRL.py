@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 from scipy.ndimage import zoom
+import random
 
 from constants.moveType import MoveType
 
@@ -9,13 +10,7 @@ from environment import Environment
 from RLTrainingDQN import DQN
 from RLTrainingPG import PolicyNetwork
 from constants.gridCellType import GridCellType
-import os
 from centralMemory import CentralMemory
-
-
-# fixing problem: OMP: Error #15: Initializing libomp.dylib, but found libiomp5.dylib already initialized.
-# https://stackoverflow.com/questions/53014306/error-15-initializing-libiomp5-dylib-but-found-libiomp5-dylib-already-initial
-os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 
 
 class BrainRL(Brain):
@@ -31,11 +26,22 @@ class BrainRL(Brain):
                 environment.gridMap.shape, GridCellType.UNEXPLORED.value, dtype=int
             )
         )
+        self.recentPositions = []
 
     # Decide what should be the next move
     def thinkAndAct(self, vision, agents: list) -> MoveType:
         self.updateLocalMap(vision)
         availableMoves = self.checkAvailableMoves(vision, agents)
+
+        currentPosition = self.agent.getPosition()
+
+        # Agent stuck (repeatly move in same cells in short term)
+        if self.recentPositions.count(currentPosition) > 3:
+            return self.randomMove(availableMoves)
+
+        if len(self.recentPositions) > 9:
+            self.recentPositions.pop()
+        self.recentPositions.insert(0, currentPosition)
 
         # Resize local map to match trained layout shape (20x20)
         h, w = self.localMap.shape
@@ -58,8 +64,10 @@ class BrainRL(Brain):
         policy_net = DQN(
             state_dim, len([type.value for type in MoveType])
         )  # match your original dimensions
-        policy_net.load_state_dict(torch.load("dqn_model.pt", weights_only=True))
-        # policy_net.eval()
+        policy_net.load_state_dict(
+            torch.load("cw/rlModel/dqn_model.pt", weights_only=True)
+        )
+        policy_net.eval()
 
         # # Load model PG
         # policy_net = PolicyNetwork(state_dim)
@@ -108,6 +116,9 @@ class BrainRL(Brain):
                 self.updateFronteir(
                     targetRow, targetColumn, vision[visionRow][visionColumn]
                 )
+
+    def randomMove(self, availableMoves):
+        return random.choice(list(availableMoves))
 
     def preprocess_observation(self, obs):
         position = obs["position"]

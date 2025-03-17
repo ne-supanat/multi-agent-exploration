@@ -2,6 +2,9 @@ import gym
 from gym import spaces
 import numpy as np
 import random
+from scipy.ndimage import zoom
+import math
+
 
 from environment import Environment
 from agent import Agent
@@ -66,11 +69,23 @@ class GridWorldEnv(gym.Env):
         # 5 actions, corresponding to "stay", "right", "up", "left", "down"
         self.action_space = spaces.Discrete(len([type.value for type in MoveType]))
 
+        self.bonusTarget = 0.1
+        self.recentPositions = []
+        self.visitedCountLocalMap = np.zeros(environment.gridMap.shape, dtype=int)
+
     def _get_obs(self):
+        # Resize local map to match trained layout shape (20x20)
+        h, w = self.localMap.shape
+        targetSize = (20, 20)
+        zoom_factors = (targetSize[0] / h, targetSize[1] / w)
+        resizedLocalMap = zoom(
+            self.localMap, zoom_factors, order=1
+        )  # order=1 = bilinear
+
         return {
             "position": self.agent.getPosition(),
             "vision": self.getVision(),
-            "local_map": self.localMap.copy(),
+            "local_map": resizedLocalMap.copy(),
         }
 
     def getVision(self):
@@ -91,6 +106,11 @@ class GridWorldEnv(gym.Env):
 
         # Reset gridmap
         self.environment.reset()
+        self.localMap = np.full(
+            self.environment.gridMap.shape,
+            GridCellType.UNEXPLORED.value,
+            dtype=int,
+        )
 
         # Random new agent start position
         randomPos = self.randomPosition()
@@ -105,6 +125,10 @@ class GridWorldEnv(gym.Env):
             self.updateGrid(self.environment.gridMap, agent)
 
         observation = self._get_obs()
+
+        self.bonusTarget = 0.1
+        self.recentPositions = []
+        self.visitedCountLocalMap = np.zeros(self.environment.gridMap.shape, dtype=int)
 
         return observation
 
@@ -133,6 +157,8 @@ class GridWorldEnv(gym.Env):
         reward = 0
 
         # Reward based on vision information
+        # TODO: consider +5 for see new partial +3 for see old partial +10 for new explored
+        # TODO: add more penalty for repetive cell more -0.1 -> -0...-10 or - more
         visionShapeRow, visionShapeColumn = (
             self.agent.vision.shape[0],
             self.agent.vision.shape[1],
@@ -140,20 +166,44 @@ class GridWorldEnv(gym.Env):
 
         newRow, newColumn = self.agent.getPosition()
 
+        # agent move out of the boundary
         if (
             newRow <= 0
             or newRow >= self.environment.gridMap.shape[0] - 1
             or newColumn <= 0
             or newColumn >= self.environment.gridMap.shape[1] - 1
-        ):  # agent move out of the boundary
+        ):
             self.agent.setPosition(savedPos[0], savedPos[1])
             newRow, newColumn = self.agent.getPosition()
-            reward -= 50
+            reward -= 10
 
+        # Penalty for repeatly move in same cells in short term
+        if self.recentPositions.count((newRow, newColumn)) > 3:
+            reward -= 2
+
+        # Penalty for repeatly move in same cells in long term
+        reward -= (
+            self.visitedCountLocalMap[newRow, newColumn] / 100
+        )  # more visited time more penalty
+        self.visitedCountLocalMap[newRow, newColumn] += 1
+
+        if len(self.recentPositions) > 9:
+            self.recentPositions.pop()
+        self.recentPositions.insert(0, (newRow, newColumn))
+
+        # reward for vision information to encourage agent to move toward frontier cell
+        # if see partailly explored cell +1
+        # if move on partailly explored cell +5
         for r in range(visionShapeRow):
             for c in range(visionShapeColumn):
                 targetRow = newRow + r - int(visionShapeRow // 2)
                 targetColumn = newColumn + c - int(visionShapeColumn // 2)
+
+                if (
+                    self.environment.gridMap[targetRow, targetColumn]
+                    == GridCellType.PARTIAL_EXPLORED.value
+                ):
+                    reward += 1
 
                 if (
                     self.environment.gridMap[targetRow, targetColumn]
@@ -162,7 +212,7 @@ class GridWorldEnv(gym.Env):
                     self.environment.gridMap[targetRow, targetColumn] = (
                         GridCellType.PARTIAL_EXPLORED.value
                     )
-                    reward += 1
+                    reward += 5
 
         # Penalty for not moving
         if action == MoveType.STAY.value:
@@ -175,12 +225,13 @@ class GridWorldEnv(gym.Env):
             agent.getPosition() for agent in self.agents
         ]:
             reward += -10
-        # Penalty for moving into already explored cell
-        elif value == GridCellType.EXPLORED.value:
-            reward += -0.5
+
+        # # Penalty for moving into already explored cell
+        # elif value == GridCellType.EXPLORED.value:
+        #     reward += -0.1
         # Reward for moving into unexplored cell
         elif value == GridCellType.PARTIAL_EXPLORED.value:
-            reward += 2
+            reward += 10
 
         # Other agents move in random manner
         for agent in self.agents:
@@ -190,15 +241,28 @@ class GridWorldEnv(gym.Env):
         for agent in [self.agent] + self.agents:
             self.updateGrid(self.environment.gridMap, agent)
 
+        openCell = self.environment.gridMap.size - np.count_nonzero(
+            self.environment.gridMap == GridCellType.WALL.value
+        )
+        exploredCell = np.count_nonzero(
+            self.environment.gridMap == GridCellType.EXPLORED.value
+        )
+
+        exploredRatio = exploredCell / openCell
+
+        if exploredRatio > self.bonusTarget:
+            reward += 20
+            self.bonusTarget += 0.1
+
         if self.environment.isFullyExplored():
-            reward += 100
+            reward += 150
 
         observation = self._get_obs()
 
         # An episode is done if the map is fully explored
         terminated = self.environment.isFullyExplored()
 
-        return observation, reward, terminated, False
+        return observation, reward / 100, terminated, False
 
     def updateGrid(self, gridMap, agent):
         # Update partially explored cell on gridMap
