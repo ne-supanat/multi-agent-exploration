@@ -8,10 +8,10 @@ from aStar import aStarSearch
 
 
 class BrainFrontier(Brain):
-    def __init__(self, agentp, layoutShape, centralMemory: SharedMemory):
+    def __init__(self, agentp, layoutShape, sharedMemory: SharedMemory):
         Brain.__init__(self, agentp, layoutShape)
-        self.centralMemory = centralMemory
-        self.localMap = centralMemory.map
+        self.sharedMemory = sharedMemory
+        self.localMap = sharedMemory.map
         self.targetCell = None
         self.queue = []
         self.stuck = 0
@@ -19,9 +19,14 @@ class BrainFrontier(Brain):
     # Frontier behavior thinking:
     # remember discovered frontier cells
     def thinkBehavior(self, vision, agents: list) -> MoveType:
+        # Reach target cell
+        if self.agent.getPosition() == self.targetCell:
+            self.sharedMemory.completeTask(self.agent.name)
+            self.targetCell = None
+
         # Remove current position from frontier list
-        if self.agent.getPosition() in self.centralMemory.frontiers:
-            self.centralMemory.removeFrontier(self.agent.getPosition())
+        if self.agent.getPosition() in self.sharedMemory.frontiers:
+            self.sharedMemory.removeFrontier(self.agent.getPosition())
 
         for visionRow in range(vision.shape[0]):
             for visionColumn in range(vision.shape[1]):
@@ -39,23 +44,19 @@ class BrainFrontier(Brain):
 
     def findBestMove(self):
         # Recall & check self target cell with blackboard
-        if self.agent.name in self.centralMemory.blackboard:
-            self.targetCell = self.centralMemory.blackboard[self.agent.name]
+        if self.agent.name in self.sharedMemory.blackboard:
+            self.targetCell = self.sharedMemory.blackboard[self.agent.name]
 
         # Find new target cell
         # if currently not have one
-        # or target cell is not in frontier anymore (already got explored)
-        if self.targetCell == None or (
-            not self.targetCell in self.centralMemory.frontiers
-        ):
-            self.targetCell = None
+        if self.targetCell == None:
             self.findNewTargetCell()
 
         # if stuck for too long (3 turns) give up on task
         if self.targetCell and self.stuck > 2:
             self.stuck = 0
-            self.centralMemory.giveUpOnTask(self.agent.name)
-            return MoveType.STAY
+            self.sharedMemory.giveUpOnTask(self.agent.name)
+            return self.findBestMove()
 
         # Planing path for new target or if stuck try find new path
         if not self.queue or self.stuck > 0:
@@ -76,17 +77,17 @@ class BrainFrontier(Brain):
 
     def updateFrontier(self, row, column, value):
         if value == GridCellType.PARTIAL_EXPLORED.value and (
-            not (row, column) in self.centralMemory.frontiers
+            not (row, column) in self.sharedMemory.frontiers
         ):
-            self.centralMemory.addFrontier((row, column))
+            self.sharedMemory.addFrontier((row, column))
 
     def findNewTargetCell(self):
         # Find the closest cell from frontier list
-        if len(self.centralMemory.frontiers) > 0:
+        if len(self.sharedMemory.frontiers) > 0:
             closestFrontier = None
             closestDistance = float("inf")
 
-            for frontier in self.centralMemory.frontiers:
+            for frontier in self.sharedMemory.frontiers:
                 fronteirRow, fronteirColumn = frontier
 
                 distance = abs(fronteirRow - self.agent.row) + abs(
@@ -102,12 +103,12 @@ class BrainFrontier(Brain):
 
             # Update blackboard
             # remove target frontier from other agent
-            for agentName in self.centralMemory.blackboard:
-                if self.targetCell == self.centralMemory.blackboard[agentName]:
-                    self.centralMemory.giveUpOnTask(agentName)
+            for agentName in self.sharedMemory.blackboard:
+                if self.targetCell == self.sharedMemory.blackboard[agentName]:
+                    self.sharedMemory.giveUpOnTask(agentName)
 
             # update blackboard with target frontier on agent name
-            self.centralMemory.signUpOnTask(self.agent.name, self.targetCell)
+            self.sharedMemory.signUpOnTask(self.agent.name, self.targetCell)
 
     def planNewPath(self):
         self.queue.clear()

@@ -20,7 +20,12 @@ class SharedMemory:
         self.frontiers.remove(pos)
 
     def signUpOnTask(self, agentName, targetCell):
+        self.removeFrontier(targetCell)
         self.blackboard[agentName] = targetCell
 
+    def completeTask(self, agentName):
+        self.blackboard[agentName] = None
+
     def giveUpOnTask(self, agentName):
+        self.addFrontier(self.blackboard[agentName])
         self.blackboard[agentName] = None
