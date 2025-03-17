@@ -67,6 +67,5 @@ class CentralMemory:
     def removeFrontier(self, pos):
         self.frontiers.remove(pos)
 
-    def giveUpOnTask(self, targetCell):
-        if targetCell in self.blackboard:
-            self.blackboard.pop(targetCell)
+    def giveUpOnTask(self, agentName):
+        self.blackboard.pop(agentName)

@@ -1,5 +1,6 @@
 import tkinter as tk
 from typing import List
+import random
 
 from environment import Environment
 from agent import Agent, Brain
@@ -49,8 +50,8 @@ class Experiment:
             noOfAgents,
             behaviourType,
             environment.cellSize,
-            environment,
             shareKnowledge,
+            environment,
         )
 
         # Update grid map for initial stage
@@ -82,23 +83,20 @@ class Experiment:
     ):
         agents = []
         spawnPositions = []
-
+        # TODO: move spawnPositions outside this function
         for r in range(environment.gridMap.shape[0]):
             for c in range(environment.gridMap.shape[1]):
                 if environment.gridMap[r, c] != GridCellType.WALL.value:
                     spawnPositions.append((r, c))
 
-                if len(spawnPositions) >= noOfAgents:
-                    break
-            if len(spawnPositions) >= noOfAgents:
-                break
+        spawnPositions = random.sample(spawnPositions, noOfAgents)
 
-        maxRow, maxColumn = map(max, zip(*spawnPositions))
-
-        if behaviourType == BehaviourType.REINFORCEMENT:
+        if behaviourType in [
+            BehaviourType.FRONTIER,
+            BehaviourType.GREEDY_FRONTIER,
+            BehaviourType.REINFORCEMENT,
+        ]:
             centralMap = CentralMemory(environment.gridSize[0], environment.gridSize[1])
-        elif behaviourType in [BehaviourType.FRONTIER, BehaviourType.GREEDY_FRONTIER]:
-            centralMap = CentralMemory(maxColumn + 1, maxRow + 1)
 
         # Spawn agents
         for i in range(noOfAgents):
@@ -113,17 +111,20 @@ class Experiment:
             elif behaviourType == BehaviourType.GREEDY:
                 brain = BrainGreedy(agent)
             elif behaviourType == BehaviourType.FRONTIER:
-                if shareKnowledge:
+                # not sharing knowledge: each agent have its own version of central map
+                if not shareKnowledge:
                     centralMap = copy.deepcopy(centralMap)
                 brain = BrainFrontier(agent, centralMap)
             elif behaviourType == BehaviourType.GREEDY_FRONTIER:
-                if shareKnowledge:
+                # not sharing knowledge: each agent have its own version of central map
+                if not shareKnowledge:
                     centralMap = copy.deepcopy(centralMap)
                 brainGreedy = BrainGreedy(agent)
                 brainFrontier = BrainFrontier(agent, centralMap)
                 brain = BrainGreedyFrontier(agent, brainGreedy, brainFrontier)
             elif behaviourType == BehaviourType.REINFORCEMENT:
-                if shareKnowledge:
+                # not sharing knowledge: each agent have its own version of central map
+                if not shareKnowledge:
                     centralMap = copy.deepcopy(centralMap)
                 brain = BrainRL(agent, environment, centralMap)
             else:
@@ -205,9 +206,9 @@ if __name__ == "__main__":
     exp = Experiment()
     print(
         exp.runOnce(
-            BehaviourType.WANDERING,
-            LayoutType.DONUT_SHAPE,
-            noOfAgents=10,
+            BehaviourType.FRONTIER,
+            LayoutType.OBSTACLES,
+            noOfAgents=2,
             shareKnowledge=True,
         )
     )

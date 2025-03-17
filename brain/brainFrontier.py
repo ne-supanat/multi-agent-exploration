@@ -59,7 +59,7 @@ class BrainFrontier(Brain):
         # if stuck for too long (3 turns) give up on task
         if self.targetCell and self.stuck > 2:
             self.stuck = 0
-            self.localMap.giveUpOnTask(self.targetCell)
+            self.localMap.giveUpOnTask(self.agent.name)
             return MoveType.STAY
 
         # Planing path for new target or stuck try find new path
