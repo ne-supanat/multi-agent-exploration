@@ -5,6 +5,7 @@ from brain.brain import Brain
 from sharedMemory import SharedMemory
 
 from aStar import aStarSearch
+from dijkstraMap import dijkstraMap, dijkstraSearch
 
 
 class BrainFrontier(Brain):
@@ -95,19 +96,8 @@ class BrainFrontier(Brain):
     def findNewTargetCell(self):
         # Find the closest cell from frontier list
         if len(self.sharedMemory.frontiers) > 0:
-            closestFrontier = None
-            closestDistance = float("inf")
-
-            for frontier in self.sharedMemory.frontiers:
-                fronteirRow, fronteirColumn = frontier
-
-                distance = abs(fronteirRow - self.agent.row) + abs(
-                    fronteirColumn - self.agent.column
-                )
-
-                if distance < closestDistance:
-                    closestDistance = distance
-                    closestFrontier = frontier
+            distanceMap = dijkstraMap(self.sharedMemory.map, self.agent.getPosition())
+            closestFrontier = dijkstraSearch(distanceMap, self.sharedMemory.frontiers)
 
             self.targetCell = closestFrontier
             self.planNewPath()

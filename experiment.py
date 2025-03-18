@@ -224,7 +224,7 @@ if __name__ == "__main__":
     exp = Experiment()
     print(
         exp.runOnce(
-            BehaviourType.FRONTIER_CENTRAL_GREEDY,
+            BehaviourType.FRONTIER,
             LayoutType.MAZE,
             noOfAgents=2,
         )
