@@ -22,25 +22,29 @@ class CentralNode:
 
         # After gather all information start planing
         if self.initialised:
-            self.plan()
+            self.planAll()
             for agent in self.agents:
                 if self.agentsTargetQueue[agent.name]:
                     self.sharedMemory.signUpOnTask(
                         agent.name, self.agentsTargetQueue[agent.name].pop(0)
                     )
 
-    # Planing a sequence of target for agent
-    def plan(self):
+    # Planing a sequence of target for all agent
+    def planAll(self):
+        pass
+
+    # Planing a sequence of target for one agent
+    def planOne(self, agent):
         pass
 
     # Return next agent's target or planing new sequence of target for agent
-    def getNextTarget(self, agentName):
-        if self.agentsTargetQueue[agentName]:
-            return self.agentsTargetQueue[agentName].pop(0)
+    def getNextTarget(self, agent):
+        if self.agentsTargetQueue[agent.name]:
+            return self.agentsTargetQueue[agent.name].pop(0)
         else:
-            self.plan()
-            if self.agentsTargetQueue[agentName]:
-                return self.getNextTarget(agentName)
+            self.planOne(agent)
+            if self.agentsTargetQueue[agent.name]:
+                return self.getNextTarget(agent)
             else:
                 return None
 

@@ -9,6 +9,8 @@ from counter import Counter
 from sharedMemory import SharedMemory
 from brain.centralNode import CentralNode
 from brain.centralNodeFIFO import CentralNodeFIFO
+from brain.centralNodeGreedy import CentralNodeGreedy
+
 
 from constants.behaviourType import BehaviourType
 from constants.layoutType import LayoutType
@@ -104,14 +106,17 @@ class Experiment:
 
         if behaviourType in [
             BehaviourType.FRONTIER,
-            BehaviourType.FRONTIER_CENTRAL_FIFO,
             BehaviourType.GREEDY_FRONTIER,
+            BehaviourType.FRONTIER_CENTRAL_FIFO,
+            BehaviourType.FRONTIER_CENTRAL_GREEDY,
             BehaviourType.REINFORCEMENT,
         ]:
             sharedMemory = SharedMemory(environment.gridSize)
 
         if behaviourType == BehaviourType.FRONTIER_CENTRAL_FIFO:
             centralNode = CentralNodeFIFO(agents, sharedMemory)
+        elif behaviourType == BehaviourType.FRONTIER_CENTRAL_GREEDY:
+            centralNode = CentralNodeGreedy(agents, sharedMemory)
 
         layoutShape = environment.gridMap.shape
 
@@ -127,18 +132,24 @@ class Experiment:
                 brain = BrainWandering(agent, layoutShape)
             elif behaviourType == BehaviourType.GREEDY:
                 brain = BrainGreedy(agent, layoutShape)
+
             elif behaviourType == BehaviourType.FRONTIER:
                 brain = BrainFrontier(agent, layoutShape, sharedMemory)
-            elif behaviourType == BehaviourType.FRONTIER_CENTRAL_FIFO:
-                brain = BrainFrontierCentralised(
-                    agent, layoutShape, sharedMemory, centralNode
-                )
             elif behaviourType == BehaviourType.GREEDY_FRONTIER:
                 brainGreedy = BrainGreedy(agent, layoutShape)
                 brainFrontier = BrainFrontier(agent, layoutShape, sharedMemory)
                 brain = BrainGreedyFrontier(
                     agent, layoutShape, brainGreedy, brainFrontier
                 )
+
+            elif behaviourType in [
+                BehaviourType.FRONTIER_CENTRAL_FIFO,
+                BehaviourType.FRONTIER_CENTRAL_GREEDY,
+            ]:
+                brain = BrainFrontierCentralised(
+                    agent, layoutShape, sharedMemory, centralNode
+                )
+
             # elif behaviourType == BehaviourType.REINFORCEMENT:
             #     # not sharing knowledge: each agent have its own version of central map
             #     if not shareKnowledge:
@@ -213,7 +224,7 @@ if __name__ == "__main__":
     exp = Experiment()
     print(
         exp.runOnce(
-            BehaviourType.GREEDY_FRONTIER,
+            BehaviourType.FRONTIER_CENTRAL_GREEDY,
             LayoutType.MAZE,
             noOfAgents=2,
         )

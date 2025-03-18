@@ -12,7 +12,8 @@ class SharedMemory:
         self.map[row, column] = value
 
     def addFrontier(self, pos):
-        self.frontiers.append(pos)
+        if not pos is None:
+            self.frontiers.append(pos)
 
     def removeFrontier(self, pos):
         if pos in self.frontiers:

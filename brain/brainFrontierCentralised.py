@@ -56,7 +56,7 @@ class BrainFrontierCentralised(BrainFrontier):
 
     def findNewTargetCell(self):
         # Request new target
-        self.targetCell = self.centralNode.getNextTarget(self.agent.name)
+        self.targetCell = self.centralNode.getNextTarget(self.agent)
         self.planNewPath()
 
         # Update blackboard
