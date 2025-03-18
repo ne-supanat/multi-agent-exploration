@@ -1,4 +1,6 @@
 import math
+from scipy.optimize import linear_sum_assignment
+import numpy as np
 
 from brain.centralNode import CentralNode
 from sharedMemory import SharedMemory
@@ -27,16 +29,41 @@ class CentralNodeZoneSplit(CentralNode):
 
         zoneHeight = math.ceil(shape[0] / len(self.agents))
 
+        zones = []
         for i, agent in enumerate(self.agents):
+            zone = []
             for rowIndex in range(zoneHeight):
                 if (i * zoneHeight) + rowIndex >= shape[0]:
                     break
                 for columnIndex in range(shape[1]):
-                    self.agentTargetPool[agent.name].append(
-                        (i * zoneHeight + rowIndex, columnIndex)
-                    )
+                    zone.append((i * zoneHeight + rowIndex, columnIndex))
 
-        for agent in self.agents:
+            zones.append(zone)
+
+        # Aassigning zone to agent optimisation
+        # Create distance matrix of each agent to centroid of each zone
+        distanceMatrix = np.zeros((len(self.agents), len(zones)))
+
+        for i, agent in enumerate(self.agents):
+            for j, zone in enumerate(zones):
+                # find approximate centroid of rectangle shape zone
+                centerRow, centerColumn = (i * zoneHeight + 0.5 * zoneHeight), (
+                    0.5 * shape[1]
+                )
+
+                # Manhattan distance
+                distanceMatrix[i, j] = abs(centerRow - agent.row) + abs(
+                    centerColumn - agent.column
+                )
+
+        # Find the closest zone for each agent
+        # using assignment problem optimisation method
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linear_sum_assignment.html
+        rowIndex, columnIndex = linear_sum_assignment(distanceMatrix)
+
+        for i in rowIndex:
+            agent = self.agents[i]
+            self.agentTargetPool[agent.name] = zones[i]
             self.planOne(agent)
 
     # Planing a sequence of target for one agent

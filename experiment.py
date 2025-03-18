@@ -104,8 +104,9 @@ class Experiment:
                 if environment.gridMap[r, c] != GridCellType.WALL.value:
                     spawnPositions.append((r, c))
 
-        spawnPositions = random.sample(spawnPositions, noOfAgents)
-
+        # spawnPositions = random.sample(spawnPositions, noOfAgents)
+        spawnPositions = [(6, 5), (7, 12)]
+        # centroids: (6,12) , (18,12)
         # Spawn agents
         for i in range(noOfAgents):
             agent = Agent(f"A{i}", cellSize)
@@ -232,8 +233,8 @@ if __name__ == "__main__":
 
     print(
         exp.runOnce(
-            BehaviourType.FRONTIER_CENTRAL_GREEDY,
-            LayoutType.OBSTACLES,
+            BehaviourType.ZONE_SPLIT,
+            LayoutType.PLAIN,
             noOfAgents=2,
         )
     )
