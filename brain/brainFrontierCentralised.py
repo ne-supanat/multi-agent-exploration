@@ -1,19 +1,8 @@
 from constants.moveType import MoveType
-from constants.gridCellType import GridCellType
 
-from brain.brain import Brain
 from sharedMemory import SharedMemory
 from brain.centralNode import CentralNode
-
-from aStar import aStarSearch
-
-from constants.moveType import MoveType
-from constants.gridCellType import GridCellType
-
 from brain.brainFrontier import BrainFrontier
-from sharedMemory import SharedMemory
-
-from aStar import aStarSearch
 
 
 class BrainFrontierCentralised(BrainFrontier):

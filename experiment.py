@@ -8,8 +8,9 @@ from ticker import Ticker
 from counter import Counter
 from sharedMemory import SharedMemory
 from brain.centralNode import CentralNode
-from brain.centralNodeFIFO import CentralNodeFIFO
-from brain.centralNodeGreedy import CentralNodeGreedy
+from brain.centralNodeFrontierFIFO import CentralNodeFrontierFIFO
+from brain.centralNodeFrontierGreedy import CentralNodeFrontierGreedy
+from brain.centralNodeZoneSplit import CentralNodeZoneSplit
 
 
 from constants.behaviourType import BehaviourType
@@ -23,6 +24,7 @@ from brain.brainGreedy import BrainGreedy
 from brain.brainFrontier import BrainFrontier
 from brain.brainFrontierCentralised import BrainFrontierCentralised
 from brain.brainGreedyFrontier import BrainGreedyFrontier
+from brain.brainZoneCentralised import BrainZoneSplit
 from brain.brainRL import BrainRL
 
 import copy
@@ -104,22 +106,6 @@ class Experiment:
 
         spawnPositions = random.sample(spawnPositions, noOfAgents)
 
-        if behaviourType in [
-            BehaviourType.FRONTIER,
-            BehaviourType.GREEDY_FRONTIER,
-            BehaviourType.FRONTIER_CENTRAL_FIFO,
-            BehaviourType.FRONTIER_CENTRAL_GREEDY,
-            BehaviourType.REINFORCEMENT,
-        ]:
-            sharedMemory = SharedMemory(environment.gridSize)
-
-        if behaviourType == BehaviourType.FRONTIER_CENTRAL_FIFO:
-            centralNode = CentralNodeFIFO(agents, sharedMemory)
-        elif behaviourType == BehaviourType.FRONTIER_CENTRAL_GREEDY:
-            centralNode = CentralNodeGreedy(agents, sharedMemory)
-
-        layoutShape = environment.gridMap.shape
-
         # Spawn agents
         for i in range(noOfAgents):
             agent = Agent(f"A{i}", cellSize)
@@ -127,12 +113,33 @@ class Experiment:
                 spawnPositions[i % len(spawnPositions)][0],
                 spawnPositions[i % len(spawnPositions)][1],
             )
+            agents.append(agent)
 
+        if behaviourType in [
+            BehaviourType.FRONTIER,
+            BehaviourType.GREEDY_FRONTIER,
+            BehaviourType.REINFORCEMENT,
+            BehaviourType.FRONTIER_CENTRAL_FIFO,
+            BehaviourType.FRONTIER_CENTRAL_GREEDY,
+            BehaviourType.ZONE_SPLIT,
+        ]:
+            sharedMemory = SharedMemory(environment.gridSize)
+
+        if behaviourType == BehaviourType.FRONTIER_CENTRAL_FIFO:
+            centralNode = CentralNodeFrontierFIFO(agents, sharedMemory)
+        elif behaviourType == BehaviourType.FRONTIER_CENTRAL_GREEDY:
+            centralNode = CentralNodeFrontierGreedy(agents, sharedMemory)
+        elif behaviourType == BehaviourType.ZONE_SPLIT:
+            centralNode = CentralNodeZoneSplit(agents, sharedMemory)
+
+        layoutShape = environment.gridMap.shape
+
+        # Setup agent behaviour
+        for agent in agents:
             if behaviourType == BehaviourType.WANDERING:
                 brain = BrainWandering(agent, layoutShape)
             elif behaviourType == BehaviourType.GREEDY:
                 brain = BrainGreedy(agent, layoutShape)
-
             elif behaviourType == BehaviourType.FRONTIER:
                 brain = BrainFrontier(agent, layoutShape, sharedMemory)
             elif behaviourType == BehaviourType.GREEDY_FRONTIER:
@@ -149,6 +156,8 @@ class Experiment:
                 brain = BrainFrontierCentralised(
                     agent, layoutShape, sharedMemory, centralNode
                 )
+            elif behaviourType in [BehaviourType.ZONE_SPLIT]:
+                brain = BrainZoneSplit(agent, layoutShape, centralNode)
 
             # elif behaviourType == BehaviourType.REINFORCEMENT:
             #     # not sharing knowledge: each agent have its own version of central map
@@ -158,8 +167,6 @@ class Experiment:
             else:
                 brain = Brain(agent, layoutShape)
             agent.setBrain(brain)
-
-            agents.append(agent)
             agent.draw(canvas)
 
         return agents
@@ -222,10 +229,11 @@ class Experiment:
 
 if __name__ == "__main__":
     exp = Experiment()
+
     print(
         exp.runOnce(
-            BehaviourType.FRONTIER,
-            LayoutType.MAZE,
+            BehaviourType.FRONTIER_CENTRAL_GREEDY,
+            LayoutType.OBSTACLES,
             noOfAgents=2,
         )
     )

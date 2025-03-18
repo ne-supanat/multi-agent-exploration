@@ -12,3 +12,4 @@ class BehaviourType(Enum):
     # Centralised behaviour
     FRONTIER_CENTRAL_FIFO = 3.1
     FRONTIER_CENTRAL_GREEDY = 3.2
+    ZONE_SPLIT = 3.3

@@ -6,7 +6,7 @@ class SharedMemory:
     def __init__(self, shape):
         self.map = np.full(shape, GridCellType.UNEXPLORED.value, dtype=int)
         self.frontiers = []
-        self.blackboard = {}  # in format of (cell_row, cell_column): agent_name
+        self.blackboard = {}  # in format of agent_name: (cell_row, cell_column)
 
     def updateValueAt(self, row, column, value):
         self.map[row, column] = value

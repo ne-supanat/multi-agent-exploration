@@ -7,27 +7,10 @@ from sharedMemory import SharedMemory
 
 class CentralNode:
     def __init__(self, agents, sharedMemory: SharedMemory):
-        self.initialised = False
         self.agents = agents
         self.sharedMemory = sharedMemory
 
         self.agentsTargetQueue = {}  # {agentName: [ (row,column) ]}
-
-    def gatheringInfo(self, agent):
-        # Prepare field
-        self.agentsTargetQueue[agent.name] = []
-
-        # Central node will be ready after gather all information form all agents
-        self.initialised = len(self.agentsTargetQueue) == len(self.agents)
-
-        # After gather all information start planing
-        if self.initialised:
-            self.planAll()
-            for agent in self.agents:
-                if self.agentsTargetQueue[agent.name]:
-                    self.sharedMemory.signUpOnTask(
-                        agent.name, self.agentsTargetQueue[agent.name].pop(0)
-                    )
 
     # Planing a sequence of target for all agent
     def planAll(self):
