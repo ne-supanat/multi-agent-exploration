@@ -108,7 +108,6 @@ class Experiment:
                     spawnPositions.append((r, c))
 
         spawnPositions = random.sample(spawnPositions, noOfAgents)
-        spawnPositions = [(1, 1), (5, 1), (1, 5)]
 
         # Spawn agents
         for i in range(noOfAgents):
@@ -233,8 +232,8 @@ if __name__ == "__main__":
 
     print(
         exp.runOnce(
-            BehaviourType.ZONE_VORONOI,
+            BehaviourType.FRONTIER,
             LayoutType.MAZE,
-            noOfAgents=3,
+            noOfAgents=5,
         )
     )

@@ -16,6 +16,7 @@ class BrainFrontier(Brain):
         self.targetCell = None
         self.queue = []
         self.stuck = 0
+        self.avoidingDistance = 3
 
     # Frontier behavior thinking:
     # remember discovered frontier cells
@@ -97,7 +98,16 @@ class BrainFrontier(Brain):
         # Find the closest cell from frontier list
         if len(self.sharedMemory.frontiers) > 0:
             distanceMap = dijkstraMap(self.sharedMemory.map, self.agent.getPosition())
-            closestFrontier = dijkstraSearch(distanceMap, self.sharedMemory.frontiers)
+
+            # Try filtering some frontier that nearby other agent's target out
+            filteredFrontier = [
+                frontier
+                for frontier in self.sharedMemory.frontiers.copy()
+                if not self.considerNearbyOtherAgentTargets(frontier)
+            ]
+            if not filteredFrontier:
+                filteredFrontier = self.sharedMemory.frontiers
+            closestFrontier = dijkstraSearch(distanceMap, filteredFrontier)
 
             self.targetCell = closestFrontier
             self.planNewPath()
@@ -112,6 +122,28 @@ class BrainFrontier(Brain):
             self.sharedMemory.signUpOnTask(self.agent.name, self.targetCell)
         else:
             self.planNewPath()
+
+    def considerNearbyOtherAgentTargets(self, frontier):
+        minDistance = float("inf")
+        for agentName in self.sharedMemory.blackboard:
+            # Not checking with itself
+            if agentName == self.agent.name:
+                continue
+
+            otherTarget = self.sharedMemory.blackboard[agentName]
+
+            # Skip if this other agent not have target yet
+            if not otherTarget:
+                continue
+
+            distance = abs(frontier[0] - otherTarget[0]) + abs(
+                frontier[1] - otherTarget[1]
+            )
+
+            if distance < minDistance:
+                minDistance = distance
+
+        return minDistance < self.avoidingDistance
 
     def planNewPath(self):
         self.queue.clear()
