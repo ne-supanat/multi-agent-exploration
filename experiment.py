@@ -11,6 +11,7 @@ from brain.centralNode import CentralNode
 from brain.centralNodeFrontierFIFO import CentralNodeFrontierFIFO
 from brain.centralNodeFrontierGreedy import CentralNodeFrontierGreedy
 from brain.centralNodeZoneSplit import CentralNodeZoneSplit
+from brain.centralNodeZoneVoronoi import CentralNodeZoneVoronoi
 
 
 from constants.behaviourType import BehaviourType
@@ -96,6 +97,8 @@ class Experiment:
         environment: Environment = None,
         centralNode: CentralNode = None,
     ):
+        # canvas.create_oval
+        agentColours = ["blue", "red", "orange", "yellow", "green", "violet"]
         agents = []
         spawnPositions = []
         # TODO: move spawnPositions outside this function
@@ -105,25 +108,18 @@ class Experiment:
                     spawnPositions.append((r, c))
 
         spawnPositions = random.sample(spawnPositions, noOfAgents)
+        spawnPositions = [(1, 1), (5, 1), (1, 5)]
 
         # Spawn agents
         for i in range(noOfAgents):
-            agent = Agent(f"A{i}", cellSize)
+            agent = Agent(f"A{i}", cellSize, colour=agentColours[i % len(agentColours)])
             agent.setPosition(
                 spawnPositions[i % len(spawnPositions)][0],
                 spawnPositions[i % len(spawnPositions)][1],
             )
             agents.append(agent)
 
-        if behaviourType in [
-            BehaviourType.FRONTIER,
-            BehaviourType.GREEDY_FRONTIER,
-            BehaviourType.REINFORCEMENT,
-            BehaviourType.FRONTIER_CENTRAL_FIFO,
-            BehaviourType.FRONTIER_CENTRAL_GREEDY,
-            BehaviourType.ZONE_SPLIT,
-        ]:
-            sharedMemory = SharedMemory(environment.gridSize)
+        sharedMemory = SharedMemory(environment.gridSize)
 
         if behaviourType == BehaviourType.FRONTIER_CENTRAL_FIFO:
             centralNode = CentralNodeFrontierFIFO(agents, sharedMemory)
@@ -131,6 +127,8 @@ class Experiment:
             centralNode = CentralNodeFrontierGreedy(agents, sharedMemory)
         elif behaviourType == BehaviourType.ZONE_SPLIT:
             centralNode = CentralNodeZoneSplit(agents, sharedMemory)
+        elif behaviourType == BehaviourType.ZONE_VORONOI:
+            centralNode = CentralNodeZoneVoronoi(agents, sharedMemory, canvas, cellSize)
 
         layoutShape = environment.gridMap.shape
 
@@ -156,7 +154,10 @@ class Experiment:
                 brain = BrainFrontierCentralised(
                     agent, layoutShape, sharedMemory, centralNode
                 )
-            elif behaviourType in [BehaviourType.ZONE_SPLIT]:
+            elif behaviourType in [
+                BehaviourType.ZONE_SPLIT,
+                BehaviourType.ZONE_VORONOI,
+            ]:
                 brain = BrainZoneSplit(agent, layoutShape, centralNode)
 
             # elif behaviourType == BehaviourType.REINFORCEMENT:
@@ -232,8 +233,8 @@ if __name__ == "__main__":
 
     print(
         exp.runOnce(
-            BehaviourType.ZONE_SPLIT,
-            LayoutType.PLAIN,
-            noOfAgents=2,
+            BehaviourType.ZONE_VORONOI,
+            LayoutType.MAZE,
+            noOfAgents=3,
         )
     )

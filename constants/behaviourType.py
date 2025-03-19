@@ -13,3 +13,4 @@ class BehaviourType(Enum):
     FRONTIER_CENTRAL_FIFO = 3.1
     FRONTIER_CENTRAL_GREEDY = 3.2
     ZONE_SPLIT = 3.3
+    ZONE_VORONOI = 3.4

@@ -1,15 +1,15 @@
 from constants.moveType import MoveType
 from constants.gridCellType import GridCellType
 
-from brain.centralNodeZoneSplit import CentralNodeZoneSplit
+from brain.centralNode import CentralNode
+from brain.centralNodeZoneVoronoi import CentralNodeZoneVoronoi
 from brain.brain import Brain
 
 from aStar import aStarSearch
 
 
-# TODO: keep update self position to central node
 class BrainZoneSplit(Brain):
-    def __init__(self, agentp, layoutShape, centralNode: CentralNodeZoneSplit):
+    def __init__(self, agentp, layoutShape, centralNode: CentralNode):
         Brain.__init__(self, agentp, layoutShape)
         self.centralNode = centralNode
         self.localMap = centralNode.sharedMemory.map
@@ -22,13 +22,13 @@ class BrainZoneSplit(Brain):
     def thinkBehavior(self, vision, agents: list) -> MoveType:
         # Request central node to recheck and update target queue
         # eg. some of target might be wall or already explored
-        self.centralNode.recheckTargetQueues(vision, self.agent)
+        self.centralNode.recheckTargetQueues(self.agent)
 
-        bestMove = self.findBestMove()
+        bestMove = self.findBestMove(agents)
 
         return bestMove
 
-    def findBestMove(self):
+    def findBestMove(self, agents):
         # Reset target cell if it is wall or already got explored
         if self.targetCell and (
             (self.targetCell == self.agent.getPosition())
@@ -42,12 +42,14 @@ class BrainZoneSplit(Brain):
         # Find new target cell
         # if currently not have one
         if self.targetCell == None:
-            self.findNewTargetCell()
+            self.findNewTargetCell(agents)
 
-        # if stuck for too long (3 turns) give up on task
+        # if stuck for too long (3 turns) request new target/ delay current target
         if self.targetCell and self.stuck > 2:
             self.stuck = 0
-            return self.findBestMove()
+            self.centralNode.planAll()
+            self.targetCell = None
+            return self.findBestMove(agents)
 
         # Planing path for new target or if stuck try find new path
         if not self.queue or self.stuck > 0:
@@ -66,10 +68,30 @@ class BrainZoneSplit(Brain):
 
         return bestMove
 
-    def findNewTargetCell(self):
+    def findNewTargetCell(self, otherAgents):
         # Request new target
         self.targetCell = self.centralNode.getNextTarget(self.agent)
-        self.planNewPath()
+        if self.targetCell:
+            self.planNewPath()
+        else:
+            # Agent completed assigned area: trying to find new zone to explore
+
+            # Moving toward other agents, avoiding stuck in same area
+            # create a better zone partitioning
+            sumRow = 0
+            sumColumn = 0
+
+            for agent in otherAgents:
+                sumRow += agent.row
+                sumColumn += agent.column
+
+            centerPointRow = sumRow // len(otherAgents)
+            centerPointColumn = sumColumn // len(otherAgents)
+
+            self.targetCell = centerPointRow, centerPointColumn
+
+            # Request for re-planning zone
+            self.centralNode.planAll()
 
     def planNewPath(self):
         self.queue.clear()

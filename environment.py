@@ -27,7 +27,7 @@ class Environment:
         layout = None
         if layoutType == LayoutType.TEST:
             layout = self.setupLayoutTest()
-        if layoutType == LayoutType.PLAIN:
+        elif layoutType == LayoutType.PLAIN:
             layout = self.setupLayoutPlain()
         elif layoutType == LayoutType.OBSTACLES:
             layout = self.setupLayoutObstacles()

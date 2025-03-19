@@ -30,6 +30,7 @@ class CentralNodeZoneSplit(CentralNode):
         zoneHeight = math.ceil(shape[0] / len(self.agents))
 
         zones = []
+        # Creating zone
         for i, agent in enumerate(self.agents):
             zone = []
             for rowIndex in range(zoneHeight):
@@ -79,7 +80,7 @@ class CentralNodeZoneSplit(CentralNode):
                 self.agentsTargetQueue[agent.name].append(closestCell)
                 self.agentTargetPool[agent.name].remove(closestCell)
 
-    def recheckTargetQueues(self, vision, agent):
+    def recheckTargetQueues(self, agent):
         for agent in self.agents:
             for pos in self.agentsTargetQueue[agent.name]:
                 if self.sharedMemory.map[pos[0], pos[1]] in [
