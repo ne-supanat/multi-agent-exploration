@@ -26,6 +26,7 @@ from brain.brainFrontier import BrainFrontier
 from brain.brainFrontierCentralised import BrainFrontierCentralised
 from brain.brainGreedyFrontier import BrainGreedyFrontier
 from brain.brainZoneCentralised import BrainZoneSplit
+from brain.brainScout import BrainScout
 from brain.brainRL import BrainRL
 
 import copy
@@ -132,7 +133,7 @@ class Experiment:
         layoutShape = environment.gridMap.shape
 
         # Setup agent behaviour
-        for agent in agents:
+        for i, agent in enumerate(agents):
             if behaviourType == BehaviourType.WANDERING:
                 brain = BrainWandering(agent, layoutShape)
             elif behaviourType == BehaviourType.GREEDY:
@@ -145,7 +146,12 @@ class Experiment:
                 brain = BrainGreedyFrontier(
                     agent, layoutShape, brainGreedy, brainFrontier
                 )
-
+            elif behaviourType == BehaviourType.SCOUT:
+                # 1 in 3 agents will be in scout role
+                if i / noOfAgents < 0.35:
+                    brain = BrainScout(agent, layoutShape, sharedMemory)
+                else:
+                    brain = BrainFrontier(agent, layoutShape, sharedMemory)
             elif behaviourType in [
                 BehaviourType.FRONTIER_CENTRAL_FIFO,
                 BehaviourType.FRONTIER_CENTRAL_GREEDY,
@@ -232,8 +238,8 @@ if __name__ == "__main__":
 
     print(
         exp.runOnce(
-            BehaviourType.FRONTIER,
-            LayoutType.MAZE,
-            noOfAgents=5,
+            BehaviourType.SCOUT,
+            LayoutType.ROOM,
+            noOfAgents=1,
         )
     )

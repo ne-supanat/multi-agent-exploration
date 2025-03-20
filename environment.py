@@ -58,8 +58,22 @@ class Environment:
         return layout
 
     def setupLayoutTest(self):
+
+        # self.gridSize = (8, 8)  # row, column
+        # self.gridMap = np.full(self.gridSize, GridCellType.UNEXPLORED.value, dtype=int)
+
+        # self.gridMap[1, 1] = GridCellType.WALL.value
+        # self.gridMap[1, 6] = GridCellType.WALL.value
+        # self.gridMap[6, 1] = GridCellType.WALL.value
+        # self.gridMap[6, 6] = GridCellType.WALL.value
+
         self.gridSize = (5, 5)  # row, column
         self.gridMap = np.full(self.gridSize, GridCellType.UNEXPLORED.value, dtype=int)
+
+        self.gridMap[1, 1] = GridCellType.WALL.value
+        self.gridMap[1, 3] = GridCellType.WALL.value
+        self.gridMap[3, 1] = GridCellType.WALL.value
+        self.gridMap[3, 3] = GridCellType.WALL.value
 
         # self.gridMap[1, 1:8] = GridCellType.EXPLORED.value
         # self.gridMap[2, 1:9] = GridCellType.PARTIAL_EXPLORED.value
