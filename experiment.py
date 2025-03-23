@@ -23,11 +23,13 @@ import environment as environment
 from brain.brainWandering import BrainWandering
 from brain.brainGreedy import BrainGreedy
 from brain.brainFrontier import BrainFrontier
+from brain.brainFrontierAssist import BrainFrontierAssist
 from brain.brainFrontierCentralised import BrainFrontierCentralised
 from brain.brainGreedyFrontier import BrainGreedyFrontier
 from brain.brainZoneCentralised import BrainZoneSplit
 from brain.brainScout import BrainScout
-from brain.brainRL import BrainRL
+
+# from brain.brainRL import BrainRL
 
 import copy
 
@@ -109,6 +111,7 @@ class Experiment:
                     spawnPositions.append((r, c))
 
         spawnPositions = random.sample(spawnPositions, noOfAgents)
+        # spawnPositions = [(1, 1), (95, 10), (95, 11), (95, 12), (95, 13)]
 
         # Spawn agents
         for i in range(noOfAgents):
@@ -146,6 +149,8 @@ class Experiment:
                 brain = BrainGreedyFrontier(
                     agent, layoutShape, brainGreedy, brainFrontier
                 )
+            elif behaviourType == BehaviourType.FRONTIER_ASSIST:
+                brain = BrainFrontierAssist(agent, layoutShape, sharedMemory)
             elif behaviourType == BehaviourType.SCOUT:
                 # 1 in 3 agents will be in scout role
                 if i / noOfAgents < 0.35:
@@ -238,8 +243,8 @@ if __name__ == "__main__":
 
     print(
         exp.runOnce(
-            BehaviourType.SCOUT,
-            LayoutType.ROOM,
-            noOfAgents=1,
+            BehaviourType.FRONTIER_ASSIST,
+            LayoutType.DISTANCE,
+            noOfAgents=10,
         )
     )

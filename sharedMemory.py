@@ -7,7 +7,10 @@ class SharedMemory:
         self.map = np.full(shape, GridCellType.UNEXPLORED.value, dtype=int)
         self.frontiers = []
         self.blackboard = {}  # in format of agent_name: (cell_row, cell_column)
+        self.helpBoard = {}  # in format of caller_name: helper_name
+        self.readyForHelp = []
 
+    # TODO: find frontier using self.map
     def updateValueAt(self, row, column, value):
         self.map[row, column] = value
 

@@ -3,12 +3,12 @@ import numpy as np
 from constants.gridCellType import GridCellType
 
 
-def imageToArray(path: str, width, height):
+def imageToArray(path: str, row, column):
     # Load the image
     img = Image.open(path).convert("L")  # convert to grayscale
 
     # Resize image to match parameters
-    img = img.resize((width, height))
+    img = img.resize((column, row))  # (width, height)
 
     # Convert to NumPy array
     arr = np.array(img, dtype=int)

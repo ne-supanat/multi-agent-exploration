@@ -12,7 +12,7 @@ from imageToArray import imageToArray
 
 class Environment:
     def __init__(self, layoutType: LayoutType = None):
-        self.cellSize = 20  # Pixels per grid cell
+        self.cellSize = 5  # Pixels per grid cell
         self.gridSize = (0, 0)
         self.gridMap = np.full((0, 0), GridCellType.UNEXPLORED.value, dtype=int)
         self.layoutType = layoutType
@@ -39,6 +39,8 @@ class Environment:
             layout = self.setupLayoutDonutShape()
         elif layoutType == LayoutType.ROOM:
             layout = self.setupLayoutRoom()
+        elif layoutType == LayoutType.DISTANCE:
+            layout = self.setupLayoutDistance()
         elif layoutType == LayoutType.RL_PLAIN_SSM:
             layout = self.setupLayoutRLPlainSSM()
         elif layoutType == LayoutType.RL_PLAIN_SM:
@@ -101,6 +103,10 @@ class Environment:
     def setupLayoutRoom(self):
         self.gridSize = (25, 25)  # row, column
         self.gridMap = imageToArray("cw/images/exp_room.png", 25, 25)
+
+    def setupLayoutDistance(self):
+        self.gridSize = (100, 20)  # row, column
+        self.gridMap = imageToArray("cw/images/exp_distance.png", 100, 20)
 
     def setupLayoutRLPlainSSM(self):
         self.gridSize = (5, 5)  # row, column

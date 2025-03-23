@@ -1,3 +1,5 @@
+import random
+
 from constants.moveType import MoveType
 from constants.gridCellType import GridCellType
 
@@ -16,6 +18,7 @@ class BrainFrontier(Brain):
         self.targetCell = None
         self.queue = []
         self.stuck = 0
+        self.planingFail = 0
         self.avoidingDistance = 3
 
     # Frontier behavior thinking:
@@ -65,9 +68,20 @@ class BrainFrontier(Brain):
         if self.targetCell == None:
             self.findNewTargetCell()
 
+        bestMove = self.decideMove()
+
+        return bestMove
+
+    def decideMove(self):
+        # if stuck for too long (9 turns) do a random move
+        if self.planingFail > 2:
+            self.planingFail = 0
+            return random.choice(list(self.availableMoves))
+
         # if stuck for too long (3 turns) give up on task
         if self.targetCell and self.stuck > 2:
             self.stuck = 0
+            self.planingFail += 1
             self.sharedMemory.giveUpOnTask(self.agent.name)
             return self.findBestMove()
 

@@ -9,6 +9,7 @@ class LayoutType(Enum):
     DONUT_SHAPE = 4
     U_SHAPE = 5
     ROOM = 6
+    DISTANCE = 7
     RL_PLAIN_SSM = -1
     RL_PLAIN_SM = -2
     RL_PLAIN = -3
