@@ -10,10 +10,6 @@ class SharedMemory:
         self.helpBoard = {}  # in format of caller_name: helper_name
         self.readyForHelp = []
 
-    # TODO: find frontier using self.map
-    def updateValueAt(self, row, column, value):
-        self.map[row, column] = value
-
     def addFrontier(self, pos):
         if not pos is None:
             self.frontiers.append(pos)
