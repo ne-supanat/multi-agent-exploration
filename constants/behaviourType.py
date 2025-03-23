@@ -9,7 +9,8 @@ class BehaviourType(Enum):
     # Distributed behaviour
     FRONTIER = 2.1
     GREEDY_FRONTIER = 2.2
-    SCOUT = 2.3
+    FRONTIER_ASSIST = 2.3
+    SCOUT = 2.4
     # Centralised behaviour
     FRONTIER_CENTRAL_FIFO = 3.1
     FRONTIER_CENTRAL_GREEDY = 3.2
