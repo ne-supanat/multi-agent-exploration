@@ -12,9 +12,10 @@ from constants.layoutType import LayoutType
 
 
 # This file is a modification of university of nottingham COMP4105 24-25 module's material
-# TODO: how many time
-# TODO: spawn position control
-NO_OF_REPS = 2
+
+# Number of total experiment run
+# NOTE: this number calulated and selected using cumulative means from Frontier behaviour in Plain layout experiment runs)
+NO_OF_REPS = 40
 
 
 # Run all type of experiment for several times

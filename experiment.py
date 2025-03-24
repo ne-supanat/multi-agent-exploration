@@ -37,8 +37,6 @@ from brain.brainScout import BrainScout
 import copy
 
 
-# TODO: experiment setup
-# same spawn positions in every behaviour
 # TODO: layout
 # complex house
 class Experiment:
@@ -71,10 +69,6 @@ class Experiment:
         canvas.focus_set()
 
         # Create central node
-        # TODO: CentralNode with behaviour type (function)
-        # FIFO, LIFO
-        # greedy/hungarian
-        # clustering
         centralNode = CentralNode([], None)
 
         # Spawn agents
