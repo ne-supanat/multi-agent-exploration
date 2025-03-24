@@ -48,7 +48,7 @@ class CentralNodeZoneSplit(CentralNode):
         for i, agent in enumerate(self.agents):
             for j, zone in enumerate(zones):
                 # find approximate centroid of rectangle shape zone
-                centerRow, centerColumn = (i * zoneHeight + 0.5 * zoneHeight), (
+                centerRow, centerColumn = (j * zoneHeight + 0.5 * zoneHeight), (
                     0.5 * shape[1]
                 )
 
@@ -56,6 +56,9 @@ class CentralNodeZoneSplit(CentralNode):
                 distanceMatrix[i, j] = abs(centerRow - agent.row) + abs(
                     centerColumn - agent.column
                 )
+        #            z1(10,20)  z2(30,20)
+        # a0(35,35)  25,15: 40   5,15: 20
+        # a1(10,35)   0,15: 15  20,15: 35
 
         # Find the closest zone for each agent
         # using assignment problem optimisation method
@@ -64,7 +67,7 @@ class CentralNodeZoneSplit(CentralNode):
 
         for i in rowIndex:
             agent = self.agents[i]
-            self.agentTargetPool[agent.name] = zones[i]
+            self.agentTargetPool[agent.name] = zones[columnIndex[i]]
             self.planOne(agent)
 
     # Planing a sequence of target for one agent

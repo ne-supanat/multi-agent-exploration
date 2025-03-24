@@ -47,7 +47,8 @@ class BrainZoneSplit(Brain):
         # if stuck for too long (3 turns) request new target/ delay current target
         if self.targetCell and self.stuck > 2:
             self.stuck = 0
-            self.centralNode.planAll()
+            if self.centralNode is CentralNodeZoneVoronoi:
+                self.centralNode.planAll()
             self.targetCell = None
             return self.findBestMove(agents)
 
@@ -91,7 +92,8 @@ class BrainZoneSplit(Brain):
             self.targetCell = centerPointRow, centerPointColumn
 
             # Request for re-planning zone
-            self.centralNode.planAll()
+            if self.centralNode is CentralNodeZoneVoronoi:
+                self.centralNode.planAll()
 
     def planNewPath(self):
         self.queue.clear()
