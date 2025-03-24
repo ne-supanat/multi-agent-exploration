@@ -49,8 +49,9 @@ class Experiment:
     def runOnce(
         self,
         behaviourType: BehaviourType,
-        layoutType: LayoutType,
+        environment: Environment,
         noOfAgents: int = 1,
+        spawnPositions=[],
     ):
         window = tk.Tk()
         window.resizable(False, False)
@@ -58,7 +59,6 @@ class Experiment:
         window.focus_force()
 
         # Setup environment
-        environment = Environment(layoutType)
         canvas = tk.Canvas(
             window,
             # width = content width + heatmap width
@@ -85,6 +85,7 @@ class Experiment:
             environment.cellSize,
             environment,
             centralNode,
+            spawnPositions,
         )
 
         # Update grid map for initial stage
@@ -102,9 +103,8 @@ class Experiment:
 
         window.mainloop()
 
-        print(f"Explored: {counter.getExploredCell()}")
-        print("- experiment end -")
-        return [counter.getExploredCell(), counter.getTotalMove()]
+        # Return experimental data
+        return counter.getExperimenterResult()
 
     def createAgents(
         self,
@@ -114,18 +114,22 @@ class Experiment:
         cellSize: int,
         environment: Environment = None,
         centralNode: CentralNode = None,
+        spawnPositions=[],
     ):
         # canvas.create_oval
-        agentColours = ["blue", "red", "orange", "yellow", "green", "violet"]
+        agentColours = [
+            "blue",
+            "red",
+            "orange",
+            "yellow",
+            "green",
+            "violet",
+            "black",
+            "white",
+            "cornflower blue",
+            "indian red",
+        ]
         agents = []
-        spawnPositions = []
-        # TODO: move spawnPositions outside this function
-        for r in range(environment.gridMap.shape[0]):
-            for c in range(environment.gridMap.shape[1]):
-                if environment.gridMap[r, c] != GridCellType.WALL.value:
-                    spawnPositions.append((r, c))
-
-        spawnPositions = random.sample(spawnPositions, noOfAgents)
 
         # Spawn agents
         for i in range(noOfAgents):
@@ -205,6 +209,11 @@ class Experiment:
         agents: List[Agent],
         window: tk.Tk,
     ):
+        # End experiment if reach maximum moves or complete the exploration
+        if ticker.isReachMaxTick() or environment.isFullyExplored():
+            window.destroy()
+            return
+
         gridMap = environment.gridMap
         accumulatedGridmap = np.zeros(gridMap.shape, dtype=int)
 
@@ -222,10 +231,6 @@ class Experiment:
 
         # Update tick
         ticker.nextTick()
-        # TODO: uncomment
-        if ticker.isReachMaxTick():  # or environment.isFullyExplored():
-            window.destroy()
-            return
 
         # update after frame after specific milliseconds
         canvas.after(
@@ -252,14 +257,29 @@ class Experiment:
         if gridMap[newRow, newColumn] != GridCellType.WALL.value:
             gridMap[newRow, newColumn] = GridCellType.EXPLORED.value
 
+    def generateSpawnPositions(self, environment: Environment, noOfAgents=1):
+        spawnPositions = []
+        for r in range(environment.gridMap.shape[0]):
+            for c in range(environment.gridMap.shape[1]):
+                if environment.gridMap[r, c] != GridCellType.WALL.value:
+                    spawnPositions.append((r, c))
+
+        return random.sample(spawnPositions, noOfAgents)
+
 
 if __name__ == "__main__":
     exp = Experiment()
 
+    noOfAgents = 10
+    behaviour = BehaviourType.WANDERING
+    env = Environment(LayoutType.PLAIN)
+    spawnPositions = exp.generateSpawnPositions(env, noOfAgents)
+
     print(
         exp.runOnce(
-            BehaviourType.WANDERING,
-            LayoutType.PLAIN,
-            noOfAgents=2,
+            behaviourType=behaviour,
+            environment=env,
+            noOfAgents=noOfAgents,
+            spawnPositions=spawnPositions,
         )
     )

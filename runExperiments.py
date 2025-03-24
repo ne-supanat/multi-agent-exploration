@@ -1,66 +1,71 @@
+import csv
 from experiment import Experiment
+from environment import Environment
 import pandas as pd
 from scipy.stats import ttest_ind
 import matplotlib.pyplot as plt
 from itertools import combinations
 import random
 
-from cw.constants.behaviourType import BehaviourType
+from constants.behaviourType import BehaviourType
 from constants.layoutType import LayoutType
 
 
 # This file is a modification of university of nottingham COMP4105 24-25 module's material
-
-NO_OF_REPS = 3
-
-
-# Run experiment for several times
-# noOfReps: number of repetition time
-def runMultipleExperiments(noOfReps: int, behaviourType: BehaviourType):
-    results = []
-    for _ in range(noOfReps):
-        exp = Experiment()
-        results.append(exp.runOnce(behaviourType, LayoutType.PLAIN))
-    return results
+# TODO: how many time
+# TODO: spawn position control
+NO_OF_REPS = 2
 
 
 # Run all type of experiment for several times
 def runExperimentsWithDifferentParameters():
-    experiments = [
-        BehaviourType.WANDERING,
+    layouts = [
+        LayoutType.PLAIN,
+        LayoutType.RL_PLAIN_SM,
+    ]  # [layout for layout in LayoutType]
+    behaviours = [
         BehaviourType.FRONTIER,
-        BehaviourType.REINFORCEMENT,
-    ]
+        BehaviourType.GREEDY_FRONTIER,
+    ]  # [behaviour for behaviour in BehaviourType]
+    numOfAgents = [2]  # [2, 5, 10]
 
-    resultsTable = {}
+    # run experiment NO_OF_REPS times
+    for numOfAgent in numOfAgents:
+        for layout in layouts:
+            savedPath = (
+                f"cw/experimentResults/experiment_{layout.name}_{numOfAgent}.csv"
+            )
+            with open(savedPath, mode="w", newline="") as file:
+                writer = csv.writer(file)
 
-    # run experiment 10 times for each type
-    for experiment in experiments:
-        dirtCollectedList = runMultipleExperiments(NO_OF_REPS, experiment)
-        resultsTable[experiment] = dirtCollectedList
+                writer.writerow(
+                    ["Behaviour", "Round", "total100", "total90", "total75", "total50"]
+                )
 
-    ## create exel file from experiment results
-    # print(resultsTable)
-    results = pd.DataFrame(resultsTable)
-    # print(results)
-    # results.to_excel("cw/experiments.xlsx")
+            for round in range(NO_OF_REPS):
+                exp = Experiment()
+                env = Environment(layout)
+                spawnPositions = exp.generateSpawnPositions(env, numOfAgent)
 
-    # Show each experiment type mean
-    for result in results:
-        print(f"{result} mean: {results[result].mean(axis=0)}")
+                for behaviour in behaviours:
+                    # =======
+                    # Format in each LAYOUT ROUND
+                    # BEHAVIOUR  ROUND  TOTAL100  TOTAL90  TOTAL75  TOTAL50
+                    # Wandering  1      100       90       75       50
+                    # =======
 
-    # results.boxplot(grid=False)
-    # plt.show()
+                    result = exp.runOnce(
+                        behaviourType=behaviour,
+                        environment=env,
+                        noOfAgents=numOfAgent,
+                        spawnPositions=spawnPositions,
+                    )
 
-    # Conduct statistical test of pair of experiments
-    # using combinations to create all possible pairs that not repeat it self
-    # https://www.geeksforgeeks.org/python-all-possible-pairs-in-list/
-    for pair in list(combinations(experiments, 2)):
-        experiment1 = pair[0]
-        experiment2 = pair[1]
+                    print(f"{layout.name}-{behaviour.name} {round}: {result}")
 
-        print(f"{experiment1}, {experiment2}:")
-        print(f"{ttest_ind(results[experiment1], results[experiment2])}")
+                    with open(savedPath, mode="a", newline="") as file:
+                        writer = csv.writer(file)
+                        writer.writerow([behaviour.name, round] + result)
 
 
 runExperimentsWithDifferentParameters()

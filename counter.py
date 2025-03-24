@@ -6,6 +6,12 @@ from environment import Environment
 class Counter:
     def __init__(self, mapSize):
         self.totalMove = 0
+
+        self.total50 = -1
+        self.total75 = -1
+        self.total90 = -1
+        self.total100 = -1
+
         self.mapSize = mapSize
 
     def updateMovementCounter(self, canvas):
@@ -45,5 +51,14 @@ class Counter:
             tags="exploredCellCount",
         )
 
-    def getTotalMove(self):
-        return self.totalMove
+        if self.total100 and environment.currentCoverage() >= 100:
+            self.total100 = self.totalMove
+        elif self.total90 and environment.currentCoverage() >= 90:
+            self.total90 = self.totalMove
+        elif self.total75 and environment.currentCoverage() >= 75:
+            self.total75 = self.totalMove
+        elif self.total50 and environment.currentCoverage() >= 50:
+            self.total50 = self.totalMove
+
+    def getExperimenterResult(self):
+        return [self.total100, self.total90, self.total75, self.total50]
