@@ -1,21 +1,28 @@
 import tkinter as tk
 import numpy as np
+import matplotlib as mpl
 
 from constants.layoutType import LayoutType
 from constants.gridCellType import GridCellType
 from imageToArray import imageToArray
 
+
 # Modification of university of nottingham COMP4105 24-25 module's material
-
-# TODO: generate randome map with connected open area?
-
-
 class Environment:
-    def __init__(self, layoutType: LayoutType = None):
-        self.cellSize = 5  # Pixels per grid cell
+    def __init__(
+        self,
+        layoutType: LayoutType = None,
+        colormap: str = "YlOrBr",
+        heatmapValueMax: int = 5,
+    ):
+        self.cellSize = 10  # Pixels per grid cell
         self.gridSize = (0, 0)
         self.gridMap = np.full((0, 0), GridCellType.UNEXPLORED.value, dtype=int)
         self.layoutType = layoutType
+
+        # Heatmap visualisation parameter
+        self.colormap = colormap
+        self.heatmapValueMax = heatmapValueMax  # maximun value in heatmap
 
         if layoutType != None:
             self.setupLayout(layoutType)
@@ -69,7 +76,7 @@ class Environment:
         # self.gridMap[6, 1] = GridCellType.WALL.value
         # self.gridMap[6, 6] = GridCellType.WALL.value
 
-        self.gridSize = (5, 5)  # row, column
+        self.gridSize = (40, 40)  # row, column
         self.gridMap = np.full(self.gridSize, GridCellType.UNEXPLORED.value, dtype=int)
 
         self.gridMap[1, 1] = GridCellType.WALL.value
@@ -105,8 +112,8 @@ class Environment:
         self.gridMap = imageToArray("cw/images/exp_room.png", 25, 25)
 
     def setupLayoutDistance(self):
-        self.gridSize = (100, 20)  # row, column
-        self.gridMap = imageToArray("cw/images/exp_distance.png", 100, 20)
+        self.gridSize = (50, 10)  # row, column
+        self.gridMap = imageToArray("cw/images/exp_distance.png", 50, 10)
 
     def setupLayoutRLPlainSSM(self):
         self.gridSize = (5, 5)  # row, column
@@ -138,16 +145,8 @@ class Environment:
             GridCellType.WALL.value
         )
 
-    def createCanvas(self, window: tk.Canvas):
-        canvas = tk.Canvas(
-            window,
-            width=self.gridSize[1] * self.cellSize,
-            height=self.gridSize[0] * self.cellSize + 40,
-        )
-        return canvas
-
-    def drawGrid(self, canvas: tk.Canvas):
-        """Draw the grid and agents in Tkinter Canvas."""
+    def drawGridVisual(self, canvas: tk.Canvas):
+        # """Draw the grid and agents in Tkinter Canvas."""
         canvas.delete("grid")
 
         row, column = self.gridMap.shape
@@ -167,9 +166,114 @@ class Environment:
                 )
                 canvas.tag_lower("grid")
 
+    def drawGridHeatmapInfo(self, canvas: tk.Canvas):
+        row, column = self.gridMap.shape
+        visualGridWidth = row * self.cellSize
+        visualGridHeight = column * self.cellSize
+
+        heatmapValueMax = self.heatmapValueMax
+        colormap = mpl.colormaps[self.colormap].resampled(heatmapValueMax)
+
+        # Create heatmap description
+        # format:
+        # ===========
+        # Visited heatmap
+        # 0 colormap[0]...colormap[5] 5
+        # ===========
+
+        canvas.create_text(
+            visualGridWidth + 10,
+            visualGridHeight + 15,
+            anchor="w",
+            text=f"Visited heatmap",
+        )
+
+        canvas.create_text(
+            visualGridWidth + 10,
+            visualGridHeight + 30,
+            anchor="w",
+            text=f"0",
+        )
+
+        for value in range(heatmapValueMax):
+            x1, y1 = value * self.cellSize, 0
+            x2, y2 = x1 + self.cellSize, y1 + self.cellSize
+
+            color = colormap(value)
+            colorCode = self.getColorCode(color)
+
+            canvas.create_rectangle(
+                visualGridWidth + 25 + x1,
+                visualGridHeight + y1 + 25,
+                visualGridWidth + 25 + x2,
+                visualGridHeight + y2 + 25,
+                fill=colorCode,
+            )
+
+        canvas.create_text(
+            visualGridWidth + 25 + (heatmapValueMax * self.cellSize) + 10,
+            visualGridHeight + 30,
+            anchor="w",
+            text=f"{heatmapValueMax}",
+        )
+
+    def drawGridHeatmap(self, canvas: tk.Canvas, heatmap):
+        # """Draw the grid and agents in Tkinter Canvas."""
+        canvas.delete("gridHeatmap")
+
+        row, column = self.gridMap.shape
+        visualGridWidth = row * self.cellSize
+
+        heatmapValueMax = self.heatmapValueMax
+        colormap = mpl.colormaps[self.colormap].resampled(heatmapValueMax)
+
+        for r in range(row):
+            for c in range(column):
+                x1, y1 = c * self.cellSize, r * self.cellSize
+                x2, y2 = x1 + self.cellSize, y1 + self.cellSize
+
+                value = heatmap[r, c]
+
+                # NOTE: type of value affect returned color
+                # int: 0, 1, 2, ..., valueCap
+                # float: 0.0, 0.1, 0.2 , ..., 1.0
+                color = colormap(value if value < heatmapValueMax else heatmapValueMax)
+                colorCode = self.getColorCode(color)
+
+                canvas.create_rectangle(
+                    visualGridWidth + x1,
+                    y1,
+                    visualGridWidth + x2,
+                    y2,
+                    fill=colorCode,
+                    # outline="white",
+                    tags="grid",
+                )
+                canvas.tag_lower("gridHeatmap")
+
+    def getColorCode(self, rgba):
+        # Create color code
+        r, g, b = int(rgba[0] * 255), int(rgba[1] * 255), int(rgba[2] * 255)
+        return f"#{r:02x}{g:02x}{b:02x}"
+
     def getMapSize(self):
         row, column = self.gridMap.shape
         return (row * self.cellSize, column * self.cellSize)
+
+    def totalCellOpen(self):
+        return self.gridMap.size - np.count_nonzero(
+            self.gridMap == GridCellType.WALL.value
+        )
+
+    def totalCellExplored(self):
+        return np.count_nonzero(self.gridMap == GridCellType.EXPLORED.value)
+
+    def currentCoverage(self):
+        openCell = self.totalCellOpen()
+        exploredCell = self.totalCellExplored()
+
+        exploredRatio = exploredCell / openCell
+        return exploredRatio * 100
 
     def isFullyExplored(self):
         return np.all(

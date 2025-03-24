@@ -15,6 +15,8 @@ class Ticker:
             self.tickSpeed = 150
         elif self.tickSpeed == 150:
             self.tickSpeed = 50
+        elif self.tickSpeed == 50:
+            self.tickSpeed = 5
         else:
             self.tickSpeed = 300
 

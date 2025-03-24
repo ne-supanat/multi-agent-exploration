@@ -1,6 +1,9 @@
 import tkinter as tk
 from typing import List
 import random
+import numpy as np
+import matplotlib as mpl
+
 
 from environment import Environment
 from agent import Agent, Brain
@@ -34,6 +37,10 @@ from brain.brainScout import BrainScout
 import copy
 
 
+# TODO: experiment setup
+# same spawn positions in every behaviour
+# TODO: layout
+# complex house
 class Experiment:
     def __init__(self):
         pass
@@ -52,7 +59,14 @@ class Experiment:
 
         # Setup environment
         environment = Environment(layoutType)
-        canvas = environment.createCanvas(window)
+        canvas = tk.Canvas(
+            window,
+            # width = content width + heatmap width
+            width=environment.gridSize[1] * environment.cellSize * 2,
+            # height = content height + space(10) + (number of conter item * text component height(15))
+            height=environment.gridSize[0] * environment.cellSize + 10 + (3 * 15),
+        )
+
         canvas.pack()
         canvas.focus_set()
 
@@ -78,7 +92,8 @@ class Experiment:
         for agent in agents:
             self.updateGrid(gridMap, agent.row, agent.column)
 
-        environment.drawGrid(canvas)
+        environment.drawGridVisual(canvas)
+        environment.drawGridHeatmapInfo(canvas)
 
         counter = Counter(environment.getMapSize())
 
@@ -111,7 +126,6 @@ class Experiment:
                     spawnPositions.append((r, c))
 
         spawnPositions = random.sample(spawnPositions, noOfAgents)
-        # spawnPositions = [(1, 1), (95, 10), (95, 11), (95, 12), (95, 13)]
 
         # Spawn agents
         for i in range(noOfAgents):
@@ -192,22 +206,23 @@ class Experiment:
         window: tk.Tk,
     ):
         gridMap = environment.gridMap
+        accumulatedGridmap = np.zeros(gridMap.shape, dtype=int)
 
         for agent in agents:
             newColumn, newRow = agent.update(canvas, gridMap, agents)
-
-            # Update explored cell counter
-            if gridMap[newRow, newColumn] != GridCellType.EXPLORED.value:
-                counter.explored(canvas)
-
             self.updateGrid(gridMap, newRow, newColumn)
+            accumulatedGridmap += agent.brain.visitedMap
 
-        environment.drawGrid(canvas)
+        environment.drawGridVisual(canvas)
+        environment.drawGridHeatmap(canvas, accumulatedGridmap)
 
-        counter.moved(canvas)
+        counter.updateExplorationCounter(canvas, environment)
+
+        counter.updateMovementCounter(canvas)
 
         # Update tick
         ticker.nextTick()
+        # TODO: uncomment
         if ticker.isReachMaxTick():  # or environment.isFullyExplored():
             window.destroy()
             return
@@ -243,8 +258,8 @@ if __name__ == "__main__":
 
     print(
         exp.runOnce(
-            BehaviourType.FRONTIER_ASSIST,
-            LayoutType.DISTANCE,
-            noOfAgents=10,
+            BehaviourType.WANDERING,
+            LayoutType.PLAIN,
+            noOfAgents=2,
         )
     )
