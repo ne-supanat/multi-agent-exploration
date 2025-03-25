@@ -42,12 +42,16 @@ class Environment:
             layout = self.setupLayoutMaze()
         elif layoutType == LayoutType.U_SHAPE:
             layout = self.setupLayoutUShape()
+        elif layoutType == LayoutType.I_SHAPE:
+            layout = self.setupLayoutIShape()
         elif layoutType == LayoutType.DONUT_SHAPE:
             layout = self.setupLayoutDonutShape()
         elif layoutType == LayoutType.ROOM:
             layout = self.setupLayoutRoom()
-        elif layoutType == LayoutType.DISTANCE:
-            layout = self.setupLayoutDistance()
+        elif layoutType == LayoutType.HOUSE:
+            layout = self.setupLayoutHouse()
+        elif layoutType == LayoutType.CAVE:
+            layout = self.setupLayoutCave()
         elif layoutType == LayoutType.RL_PLAIN_SSM:
             layout = self.setupLayoutRLPlainSSM()
         elif layoutType == LayoutType.RL_PLAIN_SM:
@@ -103,6 +107,10 @@ class Environment:
         self.gridSize = (25, 25)  # row, column
         self.gridMap = imageToArray("cw/images/exp_u.png", 25, 25)
 
+    def setupLayoutIShape(self):
+        self.gridSize = (30, 25)  # row, column
+        self.gridMap = imageToArray("cw/images/exp_i.png", 30, 25)
+
     def setupLayoutDonutShape(self):
         self.gridSize = (25, 25)  # row, column
         self.gridMap = imageToArray("cw/images/exp_donut.png", 25, 25)
@@ -111,9 +119,13 @@ class Environment:
         self.gridSize = (25, 25)  # row, column
         self.gridMap = imageToArray("cw/images/exp_room.png", 25, 25)
 
-    def setupLayoutDistance(self):
-        self.gridSize = (50, 10)  # row, column
-        self.gridMap = imageToArray("cw/images/exp_distance.png", 50, 10)
+    def setupLayoutHouse(self):
+        self.gridSize = (50, 50)  # row, column
+        self.gridMap = imageToArray("cw/images/exp_house.png", 50, 50)
+
+    def setupLayoutCave(self):
+        self.gridSize = (50, 50)  # row, column
+        self.gridMap = imageToArray("cw/images/exp_cave.png", 50, 50)
 
     def setupLayoutRLPlainSSM(self):
         self.gridSize = (5, 5)  # row, column
@@ -168,8 +180,8 @@ class Environment:
 
     def drawGridHeatmapInfo(self, canvas: tk.Canvas):
         row, column = self.gridMap.shape
-        visualGridWidth = row * self.cellSize
-        visualGridHeight = column * self.cellSize
+        visualGridWidth = column * self.cellSize
+        visualGridHeight = row * self.cellSize
 
         heatmapValueMax = self.heatmapValueMax
         colormap = mpl.colormaps[self.colormap].resampled(heatmapValueMax)
@@ -222,7 +234,7 @@ class Environment:
         canvas.delete("gridHeatmap")
 
         row, column = self.gridMap.shape
-        visualGridWidth = row * self.cellSize
+        visualGridWidth = column * self.cellSize
 
         heatmapValueMax = self.heatmapValueMax
         colormap = mpl.colormaps[self.colormap].resampled(heatmapValueMax)

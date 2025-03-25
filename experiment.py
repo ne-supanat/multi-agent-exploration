@@ -264,9 +264,9 @@ class Experiment:
 if __name__ == "__main__":
     exp = Experiment()
 
-    noOfAgents = 10
-    behaviour = BehaviourType.WANDERING
-    env = Environment(LayoutType.PLAIN)
+    noOfAgents = 5
+    behaviour = BehaviourType.GREEDY
+    env = Environment(LayoutType.I_SHAPE)
     spawnPositions = exp.generateSpawnPositions(env, noOfAgents)
 
     print(

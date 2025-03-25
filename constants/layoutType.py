@@ -8,8 +8,10 @@ class LayoutType(Enum):
     MAZE = 3
     DONUT_SHAPE = 4
     U_SHAPE = 5
-    ROOM = 6
-    DISTANCE = 7
+    I_SHAPE = 6
+    ROOM = 7
+    HOUSE = 8
+    CAVE = 9
     RL_PLAIN_SSM = -1
     RL_PLAIN_SM = -2
     RL_PLAIN = -3
