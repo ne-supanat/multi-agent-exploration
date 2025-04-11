@@ -44,8 +44,8 @@ class Environment:
             layout = self.setupLayoutUShape()
         elif layoutType == LayoutType.I_SHAPE:
             layout = self.setupLayoutIShape()
-        elif layoutType == LayoutType.DONUT_SHAPE:
-            layout = self.setupLayoutDonutShape()
+        elif layoutType == LayoutType.O_SHAPE:
+            layout = self.setupLayoutOShape()
         elif layoutType == LayoutType.ROOM:
             layout = self.setupLayoutRoom()
         elif layoutType == LayoutType.HOUSE:
@@ -80,13 +80,13 @@ class Environment:
         # self.gridMap[6, 1] = GridCellType.WALL.value
         # self.gridMap[6, 6] = GridCellType.WALL.value
 
-        self.gridSize = (40, 40)  # row, column
+        self.gridSize = (7, 7)  # row, column
         self.gridMap = np.full(self.gridSize, GridCellType.UNEXPLORED.value, dtype=int)
 
-        self.gridMap[1, 1] = GridCellType.WALL.value
-        self.gridMap[1, 3] = GridCellType.WALL.value
-        self.gridMap[3, 1] = GridCellType.WALL.value
-        self.gridMap[3, 3] = GridCellType.WALL.value
+        # self.gridMap[1, 1] = GridCellType.WALL.value
+        # self.gridMap[1, 3] = GridCellType.WALL.value
+        # self.gridMap[3, 1] = GridCellType.WALL.value
+        # self.gridMap[3, 3] = GridCellType.WALL.value
 
         # self.gridMap[1, 1:8] = GridCellType.EXPLORED.value
         # self.gridMap[2, 1:9] = GridCellType.PARTIAL_EXPLORED.value
@@ -111,7 +111,7 @@ class Environment:
         self.gridSize = (30, 25)  # row, column
         self.gridMap = imageToArray("cw/images/exp_i.png", 30, 25)
 
-    def setupLayoutDonutShape(self):
+    def setupLayoutOShape(self):
         self.gridSize = (25, 25)  # row, column
         self.gridMap = imageToArray("cw/images/exp_donut.png", 25, 25)
 

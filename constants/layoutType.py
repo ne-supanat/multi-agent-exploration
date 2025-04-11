@@ -6,7 +6,7 @@ class LayoutType(Enum):
     PLAIN = 1
     OBSTACLES = 2
     MAZE = 3
-    DONUT_SHAPE = 4
+    O_SHAPE = 4
     U_SHAPE = 5
     I_SHAPE = 6
     ROOM = 7
