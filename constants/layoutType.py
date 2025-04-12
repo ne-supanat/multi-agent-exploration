@@ -17,3 +17,6 @@ class LayoutType(Enum):
     RL_PLAIN = -3
     RL_OBSTACLES = -4
     RL_MAZE = -5
+
+    def getExperimentLayout():
+        return [layout for layout in LayoutType if layout.value > 0]

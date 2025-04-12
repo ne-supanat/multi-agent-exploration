@@ -1,6 +1,6 @@
 class Ticker:
     def __init__(self, canvas):
-        self.maxTick = 0
+        self.maxTick = 10000
         self.tick = 0
         self.tickSpeed = 5
 

@@ -15,20 +15,14 @@ from constants.layoutType import LayoutType
 
 # Number of total experiment run
 # NOTE: this number calulated and selected using cumulative means from Frontier behaviour in Plain layout experiment runs)
-NO_OF_REPS = 40
+NO_OF_REPS = 20
 
 
 # Run all type of experiment for several times
 def runExperimentsWithDifferentParameters():
-    layouts = [
-        LayoutType.PLAIN,
-        LayoutType.RL_PLAIN_SM,
-    ]  # [layout for layout in LayoutType]
-    behaviours = [
-        BehaviourType.FRONTIER,
-        BehaviourType.GREEDY_FRONTIER,
-    ]  # [behaviour for behaviour in BehaviourType]
-    numOfAgents = [2]  # [2, 5, 10]
+    layouts = LayoutType.getExperimentLayout()
+    behaviours = BehaviourType.getExperimentBehaviourType()
+    numOfAgents = [2, 5, 10]
 
     # run experiment NO_OF_REPS times
     for numOfAgent in numOfAgents:
@@ -44,11 +38,14 @@ def runExperimentsWithDifferentParameters():
                 )
 
             for round in range(NO_OF_REPS):
-                exp = Experiment()
-                env = Environment(layout)
-                spawnPositions = exp.generateSpawnPositions(env, numOfAgent)
+                temp_exp = Experiment()
+                temp_env = Environment(layout)
+                spawnPositions = temp_exp.generateSpawnPositions(temp_env, numOfAgent)
 
                 for behaviour in behaviours:
+                    exp = Experiment()
+                    env = Environment(layout)
+
                     # =======
                     # Format in each LAYOUT ROUND
                     # BEHAVIOUR  ROUND  TOTAL100  TOTAL90  TOTAL75  TOTAL50

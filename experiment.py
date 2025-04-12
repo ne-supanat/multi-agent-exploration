@@ -165,7 +165,7 @@ class Experiment:
                 brain = BrainFrontierAssist(agent, layoutShape, sharedMemory)
             elif behaviourType == BehaviourType.SCOUT:
                 # 1 in 3 agents will be in scout role
-                if i / noOfAgents < 0.35:
+                if i / noOfAgents < 0.30:
                     brain = BrainScout(agent, layoutShape, sharedMemory)
                 else:
                     brain = BrainFrontier(agent, layoutShape, sharedMemory)
@@ -264,10 +264,12 @@ class Experiment:
 if __name__ == "__main__":
     exp = Experiment()
 
-    noOfAgents = 5
-    behaviour = BehaviourType.GREEDY
-    env = Environment(LayoutType.I_SHAPE)
+    noOfAgents = 1
+    # behaviour = BehaviourType.WANDERING
+    behaviour = None
+    env = Environment(LayoutType.TEST)
     spawnPositions = exp.generateSpawnPositions(env, noOfAgents)
+    spawnPositions = [(3, 3)]
 
     print(
         exp.runOnce(
