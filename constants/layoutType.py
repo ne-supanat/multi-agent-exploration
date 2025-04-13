@@ -19,4 +19,4 @@ class LayoutType(Enum):
     RL_MAZE = -5
 
     def getExperimentLayout():
-        return [layout for layout in LayoutType if layout.value > 2]
+        return [layout for layout in LayoutType if layout.value > 0]

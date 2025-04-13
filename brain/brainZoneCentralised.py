@@ -4,6 +4,7 @@ from constants.moveType import MoveType
 from constants.gridCellType import GridCellType
 
 from brain.centralNode import CentralNode
+from brain.centralNodeZoneSplit import CentralNodeZoneSplit
 from brain.centralNodeZoneVoronoi import CentralNodeZoneVoronoi
 from brain.brain import Brain
 
@@ -26,7 +27,10 @@ class BrainZoneSplit(Brain):
     def thinkBehavior(self, vision, agents: list) -> MoveType:
         # Request central node to recheck and update target queue
         # eg. some of target might be wall or already explored
-        self.centralNode.recheckTargetCells(self.agent)
+        if type(self.centralNode) == CentralNodeZoneSplit:
+            self.centralNode.recheckTargetCells(self.agent)
+        if type(self.centralNode) == CentralNodeZoneVoronoi:
+            self.centralNode.recheckTargetQueues(self.agent)
 
         bestMove = self.findBestMove(agents)
 
@@ -120,7 +124,8 @@ class BrainZoneSplit(Brain):
 
         # Finding path fail then wait and put that target to unreachable cells list
         if path is None:
-            self.centralNode.addBlockedCells(self.agent, self.targetCell)
+            if type(self.centralNode) == CentralNodeZoneSplit:
+                self.centralNode.addBlockedCells(self.agent, self.targetCell)
             self.targetCell = None
             self.queue.append(MoveType.STAY)
             return

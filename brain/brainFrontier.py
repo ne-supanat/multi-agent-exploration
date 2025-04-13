@@ -111,7 +111,11 @@ class BrainFrontier(Brain):
     def findNewTargetCell(self):
         # Find the closest cell from frontier list
         if len(self.sharedMemory.frontiers) > 0:
-            distanceMap = dijkstraMap(self.sharedMemory.map, self.agent.getPosition())
+            distanceMap = dijkstraMap(
+                self.sharedMemory.map,
+                self.agent.getPosition(),
+                self.sharedMemory.frontiers,
+            )
 
             # Try filtering some frontier that nearby other agent's target out
             filteredFrontier = [

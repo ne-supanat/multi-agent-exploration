@@ -217,7 +217,7 @@ class Experiment:
         showHeatmap=False,
     ):
         # End experiment if reach maximum moves or complete the exploration
-        if ticker.isReachMaxTick():  # or environment.isFullyExplored():
+        if ticker.isReachMaxTick() or environment.isFullyExplored():
             window.destroy()
             return
 
@@ -281,7 +281,7 @@ if __name__ == "__main__":
 
     noOfAgents = 5
     # behaviour = BehaviourType.WANDERING
-    behaviour = BehaviourType.ZONE_SPLIT
+    behaviour = BehaviourType.ZONE_VORONOI
     env = Environment(LayoutType.HOUSE)
     spawnPositions = exp.generateSpawnPositions(env, noOfAgents)
     # spawnPositions = [(3, 5), (23, 23)]
@@ -292,6 +292,6 @@ if __name__ == "__main__":
             environment=env,
             noOfAgents=noOfAgents,
             spawnPositions=spawnPositions,
-            showHeatmap=True,
+            showHeatmap=False,
         )
     )

@@ -34,7 +34,9 @@ class CentralNodeFrontierGreedy(CentralNode):
 
     def findClosestFrontier(self, agent):
         if len(self.sharedMemory.frontiers) > 0:
-            distanceMap = dijkstraMap(self.sharedMemory.map, agent.getPosition())
+            distanceMap = dijkstraMap(
+                self.sharedMemory.map, agent.getPosition(), self.sharedMemory.frontiers
+            )
             closestFrontier = dijkstraSearch(distanceMap, self.sharedMemory.frontiers)
 
             self.agentsTargetQueue[agent.name].append(closestFrontier)

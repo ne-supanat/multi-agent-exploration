@@ -38,8 +38,10 @@ def dijkstraMap(grid, src, potentialDestination):
                 if grid[targetRow][targetColumn] == GridCellType.WALL.value:
                     continue
 
-                if (
-                    grid[targetRow][targetColumn] == GridCellType.PARTIAL_EXPLORED.value
+                if grid[targetRow][
+                    targetColumn
+                ] == GridCellType.PARTIAL_EXPLORED.value and (
+                    potentialDestination
                     and (targetRow, targetColumn) in potentialDestination
                 ):
                     hasCandidate = True

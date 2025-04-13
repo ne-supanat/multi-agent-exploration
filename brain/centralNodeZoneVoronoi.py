@@ -37,7 +37,7 @@ class CentralNodeZoneVoronoi(CentralNode):
         distanceMaps = {}
         for agent in self.agents:
             distanceMaps[agent.name] = dijkstraMap(
-                self.sharedMemory.map, agent.getPosition()
+                self.sharedMemory.map, agent.getPosition(), []
             )
 
         for row in range(shape[0]):
@@ -85,7 +85,11 @@ class CentralNodeZoneVoronoi(CentralNode):
 
     def findClosestFrontier(self, agent):
         if len(self.agentTargetPool[agent.name]) > 0:
-            distanceMap = dijkstraMap(self.sharedMemory.map, agent.getPosition())
+            distanceMap = dijkstraMap(
+                self.sharedMemory.map,
+                agent.getPosition(),
+                self.agentTargetPool[agent.name],
+            )
             closestCell = dijkstraSearch(distanceMap, self.agentTargetPool[agent.name])
 
             if closestCell:
