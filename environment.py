@@ -18,11 +18,13 @@ class Environment:
         self.cellSize = 10  # Pixels per grid cell
         self.gridSize = (0, 0)
         self.gridMap = np.full((0, 0), GridCellType.UNEXPLORED.value, dtype=int)
+        self.gridMapCurrent = np.full((0, 0), GridCellType.UNEXPLORED.value, dtype=int)
         self.layoutType = layoutType
 
         # Heatmap visualisation parameter
         self.colormap = colormap
         self.heatmapValueMax = heatmapValueMax  # maximun value in heatmap
+        self.heatMapCurrent = np.zeros((0, 0), dtype=int)
 
         if layoutType != None:
             self.setupLayout(layoutType)
@@ -68,6 +70,8 @@ class Environment:
             )
 
         self.createBoundary()
+        self.gridMapCurrent = self.gridMap.copy()
+        self.heatMapCurrent = np.zeros(self.gridSize, dtype=int)
         return layout
 
     def setupLayoutTest(self):
@@ -80,8 +84,11 @@ class Environment:
         # self.gridMap[6, 1] = GridCellType.WALL.value
         # self.gridMap[6, 6] = GridCellType.WALL.value
 
-        self.gridSize = (7, 7)  # row, column
+        self.gridSize = (15, 15)  # row, column
         self.gridMap = np.full(self.gridSize, GridCellType.UNEXPLORED.value, dtype=int)
+
+        self.gridMap[0:14, 0:13] = GridCellType.WALL.value
+        self.gridMap[0:13, 0:14] = GridCellType.WALL.value
 
         # self.gridMap[1, 1] = GridCellType.WALL.value
         # self.gridMap[1, 3] = GridCellType.WALL.value
@@ -157,7 +164,7 @@ class Environment:
             GridCellType.WALL.value
         )
 
-    def drawGridVisual(self, canvas: tk.Canvas):
+    def drawGridVisualBase(self, canvas: tk.Canvas):
         # """Draw the grid and agents in Tkinter Canvas."""
         canvas.delete("grid")
 
@@ -177,6 +184,34 @@ class Environment:
                     tags="grid",
                 )
                 canvas.tag_lower("grid")
+
+        self.gridMapCurrent = self.gridMap.copy()
+
+    def updateGridVisual(self, canvas: tk.Canvas):
+        # """Draw the grid and agents in Tkinter Canvas."""
+        # canvas.delete("grid")
+
+        row, column = self.gridMap.shape
+
+        for r in range(row):
+            for c in range(column):
+                if GridCellType.getColor(self.gridMap[r, c]) != GridCellType.getColor(
+                    self.gridMapCurrent[r, c]
+                ):
+                    x1, y1 = c * self.cellSize, r * self.cellSize
+                    x2, y2 = x1 + self.cellSize, y1 + self.cellSize
+                    canvas.create_rectangle(
+                        x1,
+                        y1,
+                        x2,
+                        y2,
+                        fill=GridCellType.getColor(self.gridMap[r, c]),
+                        outline="white",
+                        tags="grid",
+                    )
+                    canvas.tag_lower("grid")
+
+        self.gridMapCurrent = self.gridMap.copy()
 
     def drawGridHeatmapInfo(self, canvas: tk.Canvas):
         row, column = self.gridMap.shape
@@ -229,7 +264,7 @@ class Environment:
             text=f"{heatmapValueMax}",
         )
 
-    def drawGridHeatmap(self, canvas: tk.Canvas, heatmap):
+    def drawGridHeatmapBase(self, canvas: tk.Canvas):
         # """Draw the grid and agents in Tkinter Canvas."""
         canvas.delete("gridHeatmap")
 
@@ -244,7 +279,7 @@ class Environment:
                 x1, y1 = c * self.cellSize, r * self.cellSize
                 x2, y2 = x1 + self.cellSize, y1 + self.cellSize
 
-                value = heatmap[r, c]
+                value = self.heatMapCurrent[r, c]
 
                 # NOTE: type of value affect returned color
                 # int: 0, 1, 2, ..., valueCap
@@ -262,6 +297,45 @@ class Environment:
                     tags="grid",
                 )
                 canvas.tag_lower("gridHeatmap")
+
+    def updateGridHeatmap(self, canvas: tk.Canvas, heatmap):
+        # """Draw the grid and agents in Tkinter Canvas."""
+        row, column = self.gridMap.shape
+        visualGridWidth = column * self.cellSize
+
+        heatmapValueMax = self.heatmapValueMax
+        colormap = mpl.colormaps[self.colormap].resampled(heatmapValueMax)
+
+        for r in range(row):
+            for c in range(column):
+                value = heatmap[r, c]
+
+                # NOTE: type of value affect returned color
+                # int: 0, 1, 2, ..., valueCap
+                # float: 0.0, 0.1, 0.2 , ..., 1.0
+                if (
+                    heatmap[r, c] != self.heatMapCurrent[r, c]
+                    and heatmap[r, c] <= heatmapValueMax
+                ):
+                    color = colormap(
+                        value if value < heatmapValueMax else heatmapValueMax
+                    )
+                    colorCode = self.getColorCode(color)
+
+                    x1, y1 = c * self.cellSize, r * self.cellSize
+                    x2, y2 = x1 + self.cellSize, y1 + self.cellSize
+
+                    canvas.create_rectangle(
+                        visualGridWidth + x1,
+                        y1,
+                        visualGridWidth + x2,
+                        y2,
+                        fill=colorCode,
+                        # outline="white",
+                        tags="grid",
+                    )
+
+        self.heatMapCurrent = heatmap.copy()
 
     def getColorCode(self, rgba):
         # Create color code

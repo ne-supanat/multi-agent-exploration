@@ -17,7 +17,8 @@ class Brain:
 
     # Decide what should be the next move
     def thinkAndAct(self, vision, agents: list) -> MoveType:
-        self.updateVisittedMap()
+        if self.agent.showHeatmap:
+            self.updateVisittedMap()
         self.gainInfoFromVision(vision)
         self.checkAvailableMoves(vision, agents)
 

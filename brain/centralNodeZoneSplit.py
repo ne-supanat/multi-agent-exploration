@@ -16,6 +16,7 @@ class CentralNodeZoneSplit(CentralNode):
         super().__init__(agents, sharedMemory)
 
         self.agentTargetPool = {}
+        self.blockedCells = set()
 
         for agent in agents:
             self.agentsTargetQueue[agent.name] = []
@@ -25,6 +26,7 @@ class CentralNodeZoneSplit(CentralNode):
 
     # Central greedy planing: assign frontier to closest agent
     def planAll(self):
+        print("plan all")
         shape = self.sharedMemory.map.shape
 
         zoneHeight = math.ceil(shape[0] / len(self.agents))
@@ -72,22 +74,47 @@ class CentralNodeZoneSplit(CentralNode):
 
     # Planing a sequence of target for one agent
     def planOne(self, agent):
+        print("plan one")
         self.findClosestFrontier(agent)
 
     def findClosestFrontier(self, agent):
         if len(self.agentTargetPool[agent.name]) > 0:
-            distanceMap = dijkstraMap(self.sharedMemory.map, agent.getPosition())
-            closestCell = dijkstraSearch(distanceMap, self.agentTargetPool[agent.name])
+            availablePool = [
+                cell
+                for cell in self.agentTargetPool[agent.name]
+                if cell not in self.blockedCells
+            ]
+            distanceMap = dijkstraMap(
+                self.sharedMemory.map, agent.getPosition(), availablePool
+            )
+            closestCell = dijkstraSearch(distanceMap, availablePool)
 
             if closestCell:
                 self.agentsTargetQueue[agent.name].append(closestCell)
-                self.agentTargetPool[agent.name].remove(closestCell)
+            else:
+                # Success exploring reachable area
+                self.agentTargetPool[agent.name] = []
 
-    def recheckTargetQueues(self, agent):
-        for agent in self.agents:
-            for pos in self.agentsTargetQueue[agent.name]:
-                if self.sharedMemory.map[pos[0], pos[1]] in [
-                    GridCellType.WALL.value,
-                    GridCellType.EXPLORED.value,
-                ]:
-                    self.agentsTargetQueue[agent.name].remove(pos)
+    def recheckTargetCells(self, agent):
+        if agent.brain.targetCell in [
+            GridCellType.WALL.value,
+            GridCellType.EXPLORED.value,
+        ]:
+            self.brain.targetCell = None
+
+        for pos in self.agentsTargetQueue[agent.name]:
+            if self.sharedMemory.map[pos[0], pos[1]] in [
+                GridCellType.WALL.value,
+                GridCellType.EXPLORED.value,
+            ]:
+                self.agentsTargetQueue[agent.name].remove(pos)
+
+        for pos in self.agentTargetPool[agent.name]:
+            if self.sharedMemory.map[pos[0], pos[1]] in [
+                GridCellType.WALL.value,
+                GridCellType.EXPLORED.value,
+            ]:
+                self.agentTargetPool[agent.name].remove(pos)
+
+    def addBlockedCells(self, agent, pos):
+        self.blockedCells.add(pos)

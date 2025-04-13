@@ -22,7 +22,7 @@ NO_OF_REPS = 20
 def runExperimentsWithDifferentParameters():
     layouts = LayoutType.getExperimentLayout()
     behaviours = BehaviourType.getExperimentBehaviourType()
-    numOfAgents = [2, 5, 10]
+    numOfAgents = [15, 10, 5]
 
     # run experiment NO_OF_REPS times
     for numOfAgent in numOfAgents:

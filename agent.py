@@ -5,13 +5,14 @@ from brain.brain import Brain
 
 
 class Agent:
-    def __init__(self, name, cellSize, colour):
+    def __init__(self, name, cellSize, colour, showHeatmap):
         self.name = name
         self.row = 1
         self.column = 1
         self.cellSize = cellSize
         self.vision = np.zeros((3, 3))  # simulate limited vision only 1 cell around
         self.colour = colour
+        self.showHeatmap = showHeatmap
 
     def getPosition(self):
         return (self.row, self.column)

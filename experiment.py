@@ -37,8 +37,6 @@ from brain.brainScout import BrainScout
 import copy
 
 
-# TODO: layout
-# complex house
 class Experiment:
     def __init__(self):
         pass
@@ -50,6 +48,7 @@ class Experiment:
         environment: Environment,
         noOfAgents: int = 1,
         spawnPositions=[],
+        showHeatmap=False,
     ):
         window = tk.Tk()
         window.resizable(False, False)
@@ -60,7 +59,11 @@ class Experiment:
         canvas = tk.Canvas(
             window,
             # width = content width + heatmap width
-            width=environment.gridSize[1] * environment.cellSize * 2,
+            width=(
+                environment.gridSize[1]
+                * environment.cellSize
+                * (2 if showHeatmap else 1)
+            ),
             # height = content height + space(10) + (number of conter item * text component height(15))
             height=environment.gridSize[0] * environment.cellSize + 10 + (3 * 15),
         )
@@ -80,6 +83,7 @@ class Experiment:
             environment,
             centralNode,
             spawnPositions,
+            showHeatmap,
         )
 
         # Update grid map for initial stage
@@ -87,13 +91,15 @@ class Experiment:
         for agent in agents:
             self.updateGrid(gridMap, agent.row, agent.column)
 
-        environment.drawGridVisual(canvas)
-        environment.drawGridHeatmapInfo(canvas)
+        environment.drawGridVisualBase(canvas)
+        if showHeatmap:
+            environment.drawGridHeatmapInfo(canvas)
+            environment.drawGridHeatmapBase(canvas)
 
         counter = Counter(environment.getMapSize())
 
         ticker = Ticker(canvas)
-        self.update(canvas, ticker, counter, environment, agents, window)
+        self.update(canvas, ticker, counter, environment, agents, window, showHeatmap)
 
         window.mainloop()
 
@@ -109,6 +115,7 @@ class Experiment:
         environment: Environment = None,
         centralNode: CentralNode = None,
         spawnPositions=[],
+        showHeatmap=False,
     ):
         # canvas.create_oval
         agentColours = [
@@ -127,7 +134,12 @@ class Experiment:
 
         # Spawn agents
         for i in range(noOfAgents):
-            agent = Agent(f"A{i}", cellSize, colour=agentColours[i % len(agentColours)])
+            agent = Agent(
+                f"A{i}",
+                cellSize,
+                colour=agentColours[i % len(agentColours)],
+                showHeatmap=showHeatmap,
+            )
             agent.setPosition(
                 spawnPositions[i % len(spawnPositions)][0],
                 spawnPositions[i % len(spawnPositions)][1],
@@ -202,9 +214,10 @@ class Experiment:
         environment: Environment,
         agents: List[Agent],
         window: tk.Tk,
+        showHeatmap=False,
     ):
         # End experiment if reach maximum moves or complete the exploration
-        if ticker.isReachMaxTick() or environment.isFullyExplored():
+        if ticker.isReachMaxTick():  # or environment.isFullyExplored():
             window.destroy()
             return
 
@@ -216,8 +229,9 @@ class Experiment:
             self.updateGrid(gridMap, newRow, newColumn)
             accumulatedGridmap += agent.brain.visitedMap
 
-        environment.drawGridVisual(canvas)
-        environment.drawGridHeatmap(canvas, accumulatedGridmap)
+        environment.updateGridVisual(canvas)
+        if showHeatmap:
+            environment.updateGridHeatmap(canvas, accumulatedGridmap)
 
         counter.updateExplorationCounter(canvas, environment)
 
@@ -236,6 +250,7 @@ class Experiment:
             environment,
             agents,
             window,
+            showHeatmap,
         )
 
     def updateGrid(self, gridMap, newRow, newColumn):
@@ -264,12 +279,12 @@ class Experiment:
 if __name__ == "__main__":
     exp = Experiment()
 
-    noOfAgents = 1
+    noOfAgents = 5
     # behaviour = BehaviourType.WANDERING
-    behaviour = None
-    env = Environment(LayoutType.TEST)
+    behaviour = BehaviourType.ZONE_SPLIT
+    env = Environment(LayoutType.HOUSE)
     spawnPositions = exp.generateSpawnPositions(env, noOfAgents)
-    spawnPositions = [(3, 3)]
+    # spawnPositions = [(3, 5), (23, 23)]
 
     print(
         exp.runOnce(
@@ -277,5 +292,6 @@ if __name__ == "__main__":
             environment=env,
             noOfAgents=noOfAgents,
             spawnPositions=spawnPositions,
+            showHeatmap=True,
         )
     )

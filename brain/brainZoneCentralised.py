@@ -1,3 +1,5 @@
+import random
+
 from constants.moveType import MoveType
 from constants.gridCellType import GridCellType
 
@@ -16,13 +18,15 @@ class BrainZoneSplit(Brain):
         self.targetCell = None
         self.queue = []
         self.stuck = 0
+        self.invalidTarget = []
+        self.planingFail = 0
 
     # Zone centralised behavior thinking:
     # explore the zone assigned by central node
     def thinkBehavior(self, vision, agents: list) -> MoveType:
         # Request central node to recheck and update target queue
         # eg. some of target might be wall or already explored
-        self.centralNode.recheckTargetQueues(self.agent)
+        self.centralNode.recheckTargetCells(self.agent)
 
         bestMove = self.findBestMove(agents)
 
@@ -44,10 +48,16 @@ class BrainZoneSplit(Brain):
         if self.targetCell == None:
             self.findNewTargetCell(agents)
 
+        # if stuck for too long (9 turns) do a random move
+        if self.planingFail > 2:
+            self.planingFail = 0
+            return random.choice(list(self.availableMoves))
+
         # if stuck for too long (3 turns) request new target/ delay current target
         if self.targetCell and self.stuck > 2:
             self.stuck = 0
-            if self.centralNode is CentralNodeZoneVoronoi:
+            self.planingFail += 1
+            if type(self.centralNode) is CentralNodeZoneVoronoi:
                 self.centralNode.planAll()
             self.targetCell = None
             return self.findBestMove(agents)
@@ -74,8 +84,8 @@ class BrainZoneSplit(Brain):
         self.targetCell = self.centralNode.getNextTarget(self.agent)
         if self.targetCell:
             self.planNewPath()
-        else:
-            # Agent completed assigned area: trying to find new zone to explore
+        elif type(self.centralNode) is CentralNodeZoneVoronoi:
+            # Voronoi; Agent completed assigned area: trying to find new zone to explore
 
             # Moving toward other agents, avoiding stuck in same area
             # create a better zone partitioning
@@ -92,8 +102,7 @@ class BrainZoneSplit(Brain):
             self.targetCell = centerPointRow, centerPointColumn
 
             # Request for re-planning zone
-            if self.centralNode is CentralNodeZoneVoronoi:
-                self.centralNode.planAll()
+            self.centralNode.planAll()
 
     def planNewPath(self):
         self.queue.clear()
@@ -109,8 +118,10 @@ class BrainZoneSplit(Brain):
             self.localMap, (self.agent.row, self.agent.column), self.targetCell
         )
 
-        # Finding path fail then wait
+        # Finding path fail then wait and put that target to unreachable cells list
         if path is None:
+            self.centralNode.addBlockedCells(self.agent, self.targetCell)
+            self.targetCell = None
             self.queue.append(MoveType.STAY)
             return
 

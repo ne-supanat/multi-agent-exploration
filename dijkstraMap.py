@@ -6,44 +6,50 @@ from constants.gridCellType import GridCellType
 # https://www.geeksforgeeks.org/introduction-to-dijkstras-shortest-path-algorithm/
 
 
-def dijkstraMap(grid, src):
+def dijkstraMap(grid, src, potentialDestination):
     gridShape = grid.shape
     visited = np.full(gridShape, False)
     distanceMap = np.full(gridShape, float("inf"))
     q = []
 
     distanceMap[src[0], src[1]] = 0
-    heapq.heappush(q, (src, 0))
+    heapq.heappush(q, (0, src))  # (distance, position)
+
+    hasCandidate = False
 
     while q:
-        node = heapq.heappop(q)
-        (row, column), distance = node
+        distance, (row, column) = heapq.heappop(q)
 
+        if visited[row, column]:
+            continue
         visited[row, column] = True
 
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
         for direction in directions:
             targetRow, targetColumn = row + direction[0], column + direction[1]
+
+            if hasCandidate:
+                distanceToSrc = abs(src[0] - targetRow) + abs(src[1] - targetColumn)
+                if distanceToSrc > 10:
+                    return distanceMap
+
             # Prevent search out of boundary
-            if (
-                targetRow >= 0
-                and targetRow < gridShape[0]
-                and targetColumn >= 0
-                and targetColumn < gridShape[1]
-            ):
+            if 0 <= targetRow < gridShape[0] and 0 <= targetColumn < gridShape[1]:
                 if grid[targetRow][targetColumn] == GridCellType.WALL.value:
                     continue
 
+                if (
+                    grid[targetRow][targetColumn] == GridCellType.PARTIAL_EXPLORED.value
+                    and (targetRow, targetColumn) in potentialDestination
+                ):
+                    hasCandidate = True
+
+                # No data in distance map yet
                 if not visited[targetRow, targetColumn]:
                     newDistance = distance + 1
-
-                    # No data in distance map yet
-                    if distanceMap[targetRow, targetColumn] == 0:
+                    if newDistance < distanceMap[targetRow, targetColumn]:
                         distanceMap[targetRow, targetColumn] = newDistance
-                    else:
-                        if newDistance < distanceMap[targetRow, targetColumn]:
-                            distanceMap[targetRow, targetColumn] = newDistance
-                            heapq.heappush(q, ((targetRow, targetColumn), newDistance))
+                        heapq.heappush(q, (newDistance, (targetRow, targetColumn)))
 
     return distanceMap
 

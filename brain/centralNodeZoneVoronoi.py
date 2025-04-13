@@ -26,7 +26,7 @@ class CentralNodeZoneVoronoi(CentralNode):
 
         self.planAll()
 
-    # Central greedy planing: assign frontier to closest agent
+    # Central voronoi planing: assign zone
     def planAll(self):
         for agent in self.agents:
             self.agentTargetPool[agent.name] = []
