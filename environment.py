@@ -127,12 +127,12 @@ class Environment:
         self.gridMap = imageToArray("cw/images/exp_room.png", 25, 25)
 
     def setupLayoutHouse(self):
-        self.gridSize = (50, 50)  # row, column
-        self.gridMap = imageToArray("cw/images/exp_house.png", 50, 50)
+        self.gridSize = (30, 30)  # row, column
+        self.gridMap = imageToArray("cw/images/exp_house.png", 30, 30)
 
     def setupLayoutCave(self):
-        self.gridSize = (50, 50)  # row, column
-        self.gridMap = imageToArray("cw/images/exp_cave.png", 50, 50)
+        self.gridSize = (30, 30)  # row, column
+        self.gridMap = imageToArray("cw/images/exp_cave.png", 30, 30)
 
     def setupLayoutRLPlainSSM(self):
         self.gridSize = (5, 5)  # row, column

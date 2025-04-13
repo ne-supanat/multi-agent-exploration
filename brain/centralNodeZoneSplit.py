@@ -26,7 +26,6 @@ class CentralNodeZoneSplit(CentralNode):
 
     # Central greedy planing: assign frontier to closest agent
     def planAll(self):
-        print("plan all")
         shape = self.sharedMemory.map.shape
 
         zoneHeight = math.ceil(shape[0] / len(self.agents))
@@ -74,7 +73,6 @@ class CentralNodeZoneSplit(CentralNode):
 
     # Planing a sequence of target for one agent
     def planOne(self, agent):
-        print("plan one")
         self.findClosestFrontier(agent)
 
     def findClosestFrontier(self, agent):
