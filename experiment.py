@@ -279,12 +279,13 @@ class Experiment:
 if __name__ == "__main__":
     exp = Experiment()
 
-    noOfAgents = 5
+    noOfAgents = 1
     # behaviour = BehaviourType.WANDERING
-    behaviour = BehaviourType.ZONE_VORONOI
-    env = Environment(LayoutType.HOUSE)
-    spawnPositions = exp.generateSpawnPositions(env, noOfAgents)
-    # spawnPositions = [(3, 5), (23, 23)]
+    behaviour = None
+
+    env = Environment(LayoutType.TEST)
+    # spawnPositions = exp.generateSpawnPositions(env, noOfAgents)
+    spawnPositions = [(7, 7), (5, 7)]
 
     print(
         exp.runOnce(

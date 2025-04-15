@@ -87,8 +87,23 @@ class Environment:
         self.gridSize = (15, 15)  # row, column
         self.gridMap = np.full(self.gridSize, GridCellType.UNEXPLORED.value, dtype=int)
 
-        self.gridMap[0:14, 0:13] = GridCellType.WALL.value
-        self.gridMap[0:13, 0:14] = GridCellType.WALL.value
+        # Furthest target: issue
+        self.gridMap[0:14, 4] = GridCellType.PARTIAL_EXPLORED.value
+        self.gridMap[0:14, 5:10] = GridCellType.EXPLORED.value
+        self.gridMap[0:14, 10] = GridCellType.PARTIAL_EXPLORED.value
+
+        # Furthest target: ideal
+        # self.gridMap[9:14, 0:6] = GridCellType.PARTIAL_EXPLORED.value
+        # self.gridMap[12:14, 6] = GridCellType.PARTIAL_EXPLORED.value
+        # self.gridMap[10:14, 0:5] = GridCellType.EXPLORED.value
+        # self.gridMap[13, 5] = GridCellType.EXPLORED.value
+
+        # Avoiding selection: issue
+        # self.gridMap[0:14, 0:5] = GridCellType.EXPLORED.value
+        # self.gridMap[0:14, 5] = GridCellType.PARTIAL_EXPLORED.value
+        # self.gridMap[0:14, 6:10] = GridCellType.EXPLORED.value
+        # self.gridMap[0:14, 10] = GridCellType.PARTIAL_EXPLORED.value
+        # self.gridMap[0:13, 0:14] = GridCellType.WALL.value
 
         # self.gridMap[1, 1] = GridCellType.WALL.value
         # self.gridMap[1, 3] = GridCellType.WALL.value
