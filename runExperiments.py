@@ -27,9 +27,7 @@ def runExperimentsWithDifferentParameters():
     # run experiment NO_OF_REPS times
     for numOfAgent in numOfAgents:
         for layout in layouts:
-            savedPath = (
-                f"cw/experimentResults/experiment_{layout.name}_{numOfAgent}.csv"
-            )
+            savedPath = f"experimentResults/experiment_{layout.name}_{numOfAgent}.csv"
             with open(savedPath, mode="w", newline="") as file:
                 writer = csv.writer(file)
 

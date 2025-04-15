@@ -1,0 +1,43 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python Debugger: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python Debugger: Main File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "runExperiments.py",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python Debugger: Run Once",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "experiment.py",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python Debugger: RL training PG",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "RLTrainingPG.py",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python Debugger: RL training DQN",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "RLTrainingDQN.py",
+      "console": "integratedTerminal"
+    }
+  ]
+}

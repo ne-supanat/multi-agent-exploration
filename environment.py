@@ -115,59 +115,59 @@ class Environment:
 
     def setupLayoutPlain(self):
         self.gridSize = (25, 25)  # row, column
-        self.gridMap = imageToArray("cw/images/exp_plain.png", 25, 25)
+        self.gridMap = imageToArray("images/exp_plain.png", 25, 25)
 
     def setupLayoutObstacles(self):
         self.gridSize = (25, 25)  # row, column
-        self.gridMap = imageToArray("cw/images/exp_obs.png", 25, 25)
+        self.gridMap = imageToArray("images/exp_obs.png", 25, 25)
 
     def setupLayoutMaze(self):
         self.gridSize = (25, 25)  # row, column
-        self.gridMap = imageToArray("cw/images/exp_maze.png", 25, 25)
+        self.gridMap = imageToArray("images/exp_maze.png", 25, 25)
 
     def setupLayoutUShape(self):
         self.gridSize = (25, 25)  # row, column
-        self.gridMap = imageToArray("cw/images/exp_u.png", 25, 25)
+        self.gridMap = imageToArray("images/exp_u.png", 25, 25)
 
     def setupLayoutIShape(self):
         self.gridSize = (30, 25)  # row, column
-        self.gridMap = imageToArray("cw/images/exp_i.png", 30, 25)
+        self.gridMap = imageToArray("images/exp_i.png", 30, 25)
 
     def setupLayoutOShape(self):
         self.gridSize = (25, 25)  # row, column
-        self.gridMap = imageToArray("cw/images/exp_donut.png", 25, 25)
+        self.gridMap = imageToArray("images/exp_donut.png", 25, 25)
 
     def setupLayoutRoom(self):
         self.gridSize = (25, 25)  # row, column
-        self.gridMap = imageToArray("cw/images/exp_room.png", 25, 25)
+        self.gridMap = imageToArray("images/exp_room.png", 25, 25)
 
     def setupLayoutHouse(self):
         self.gridSize = (30, 30)  # row, column
-        self.gridMap = imageToArray("cw/images/exp_house.png", 30, 30)
+        self.gridMap = imageToArray("images/exp_house.png", 30, 30)
 
     def setupLayoutCave(self):
         self.gridSize = (30, 30)  # row, column
-        self.gridMap = imageToArray("cw/images/exp_cave.png", 30, 30)
+        self.gridMap = imageToArray("images/exp_cave.png", 30, 30)
 
     def setupLayoutRLPlainSSM(self):
         self.gridSize = (5, 5)  # row, column
-        self.gridMap = imageToArray("cw/images/rl_plain_ssm.png", 5, 5)
+        self.gridMap = imageToArray("images/rl_plain_ssm.png", 5, 5)
 
     def setupLayoutRLPlainSM(self):
         self.gridSize = (10, 10)  # row, column
-        self.gridMap = imageToArray("cw/images/rl_plain_sm.png", 10, 10)
+        self.gridMap = imageToArray("images/rl_plain_sm.png", 10, 10)
 
     def setupLayoutRLPlain(self):
         self.gridSize = (20, 20)  # row, column
-        self.gridMap = imageToArray("cw/images/rl_plain.png", 20, 20)
+        self.gridMap = imageToArray("images/rl_plain.png", 20, 20)
 
     def setupLayoutRLObstacles(self):
         self.gridSize = (20, 20)  # row, column
-        self.gridMap = imageToArray("cw/images/rl_obs.png", 20, 20)
+        self.gridMap = imageToArray("images/rl_obs.png", 20, 20)
 
     def setupLayoutRLMaze(self):
         self.gridSize = (20, 20)  # row, column
-        self.gridMap = imageToArray("cw/images/rl_maze.png", 20, 20)
+        self.gridMap = imageToArray("images/rl_maze.png", 20, 20)
 
     def createBoundary(self):
         self.gridMap[0 : self.gridSize[0], 0] = GridCellType.WALL.value
