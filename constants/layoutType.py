@@ -12,11 +12,6 @@ class LayoutType(Enum):
     ROOM = 7
     HOUSE = 8
     CAVE = 9
-    RL_PLAIN_SSM = -1
-    RL_PLAIN_SM = -2
-    RL_PLAIN = -3
-    RL_OBSTACLES = -4
-    RL_MAZE = -5
 
     def getExperimentLayout():
         return [layout for layout in LayoutType if layout.value > 0]

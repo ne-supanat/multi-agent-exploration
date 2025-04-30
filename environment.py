@@ -54,16 +54,6 @@ class Environment:
             layout = self.setupLayoutHouse()
         elif layoutType == LayoutType.CAVE:
             layout = self.setupLayoutCave()
-        elif layoutType == LayoutType.RL_PLAIN_SSM:
-            layout = self.setupLayoutRLPlainSSM()
-        elif layoutType == LayoutType.RL_PLAIN_SM:
-            layout = self.setupLayoutRLPlainSM()
-        elif layoutType == LayoutType.RL_PLAIN:
-            layout = self.setupLayoutRLPlain()
-        elif layoutType == LayoutType.RL_OBSTACLES:
-            layout = self.setupLayoutRLObstacles()
-        elif layoutType == LayoutType.RL_MAZE:
-            layout = self.setupLayoutRLMaze()
         else:
             self.gridMap = np.full(
                 self.gridSize, GridCellType.UNEXPLORED.value, dtype=int
@@ -154,26 +144,6 @@ class Environment:
     def setupLayoutCave(self):
         self.gridSize = (30, 30)  # row, column
         self.gridMap = imageToArray("images/exp_cave.png", 30, 30)
-
-    def setupLayoutRLPlainSSM(self):
-        self.gridSize = (5, 5)  # row, column
-        self.gridMap = imageToArray("images/rl_plain_ssm.png", 5, 5)
-
-    def setupLayoutRLPlainSM(self):
-        self.gridSize = (10, 10)  # row, column
-        self.gridMap = imageToArray("images/rl_plain_sm.png", 10, 10)
-
-    def setupLayoutRLPlain(self):
-        self.gridSize = (20, 20)  # row, column
-        self.gridMap = imageToArray("images/rl_plain.png", 20, 20)
-
-    def setupLayoutRLObstacles(self):
-        self.gridSize = (20, 20)  # row, column
-        self.gridMap = imageToArray("images/rl_obs.png", 20, 20)
-
-    def setupLayoutRLMaze(self):
-        self.gridSize = (20, 20)  # row, column
-        self.gridMap = imageToArray("images/rl_maze.png", 20, 20)
 
     def createBoundary(self):
         self.gridMap[0 : self.gridSize[0], 0] = GridCellType.WALL.value

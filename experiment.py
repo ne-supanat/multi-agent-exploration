@@ -32,8 +32,6 @@ from brain.brainGreedyFrontier import BrainGreedyFrontier
 from brain.brainZoneCentralised import BrainZoneSplit
 from brain.brainScout import BrainScout
 
-# from brain.brainRL import BrainRL
-
 import copy
 
 
@@ -193,12 +191,6 @@ class Experiment:
                 BehaviourType.ZONE_VORONOI,
             ]:
                 brain = BrainZoneSplit(agent, layoutShape, centralNode)
-
-            # elif behaviourType == BehaviourType.REINFORCEMENT:
-            #     # not sharing knowledge: each agent have its own version of central map
-            #     if not shareKnowledge:
-            #         centralMap = copy.deepcopy(centralMap)
-            #     brain = BrainRL(agent, environment, centralMap)
             else:
                 brain = Brain(agent, layoutShape)
             agent.setBrain(brain)

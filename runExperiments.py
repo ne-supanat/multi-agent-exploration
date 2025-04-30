@@ -15,7 +15,7 @@ from constants.layoutType import LayoutType
 
 # Number of total experiment run
 # NOTE: this number calulated and selected using cumulative means from Frontier behaviour in Plain layout experiment runs)
-NO_OF_REPS = 20
+NO_OF_REPS = 1
 
 
 # Run all type of experiment for several times
@@ -27,7 +27,9 @@ def runExperimentsWithDifferentParameters():
     # run experiment NO_OF_REPS times
     for numOfAgent in numOfAgents:
         for layout in layouts:
-            savedPath = f"experimentResults/experiment_{layout.name}_{numOfAgent}.csv"
+            savedPath = (
+                f"analysis/experimentResults/experiment_{layout.name}_{numOfAgent}.csv"
+            )
             with open(savedPath, mode="w", newline="") as file:
                 writer = csv.writer(file)
 

@@ -24,20 +24,6 @@
       "request": "launch",
       "program": "experiment.py",
       "console": "integratedTerminal"
-    },
-    {
-      "name": "Python Debugger: RL training PG",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "RLTrainingPG.py",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Python Debugger: RL training DQN",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "RLTrainingDQN.py",
-      "console": "integratedTerminal"
     }
   ]
 }
