@@ -15,7 +15,7 @@ from constants.layoutType import LayoutType
 
 # Number of total experiment run
 # NOTE: this number calulated and selected using cumulative means from Frontier behaviour in Plain layout experiment runs)
-NO_OF_REPS = 1
+NO_OF_REPS = 20
 
 
 # Run all type of experiment for several times
