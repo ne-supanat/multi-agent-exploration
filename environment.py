@@ -77,16 +77,30 @@ class Environment:
         self.gridSize = (15, 15)  # row, column
         self.gridMap = np.full(self.gridSize, GridCellType.UNEXPLORED.value, dtype=int)
 
-        # Mapping example
-        self.gridMap[0:2, 0:14] = GridCellType.WALL.value
-        self.gridMap[2:4, 0:14] = GridCellType.UNEXPLORED.value
-        self.gridMap[4:6, 0:14] = GridCellType.PARTIAL_EXPLORED.value
-        self.gridMap[6:8, 0:14] = GridCellType.EXPLORED.value
+        # Greed example
+        self.gridMap[0:14, 0:14] = GridCellType.PARTIAL_EXPLORED.value
+        self.gridMap[1, 6:8] = GridCellType.EXPLORED.value
+        self.gridMap[2:13, 2:13] = GridCellType.EXPLORED.value
 
-        # Furthest target: issue
-        self.gridMap[0:14, 4] = GridCellType.PARTIAL_EXPLORED.value
-        self.gridMap[0:14, 5:10] = GridCellType.EXPLORED.value
-        self.gridMap[0:14, 10] = GridCellType.PARTIAL_EXPLORED.value
+        # # Frontier example
+        # self.gridMap[4:14, 0:5] = GridCellType.EXPLORED.value
+        # self.gridMap[3, 0:5] = GridCellType.PARTIAL_EXPLORED.value
+        # self.gridMap[3:6, 5] = GridCellType.PARTIAL_EXPLORED.value
+
+        # self.gridMap[6:14, 5:8] = GridCellType.EXPLORED.value
+        # self.gridMap[6, 5:8] = GridCellType.PARTIAL_EXPLORED.value
+        # self.gridMap[6:14, 8] = GridCellType.PARTIAL_EXPLORED.value
+
+        # # Mapping example
+        # self.gridMap[0:2, 0:14] = GridCellType.WALL.value
+        # self.gridMap[2:4, 0:14] = GridCellType.UNEXPLORED.value
+        # self.gridMap[4:6, 0:14] = GridCellType.PARTIAL_EXPLORED.value
+        # self.gridMap[6:8, 0:14] = GridCellType.EXPLORED.value
+
+        # # Furthest target: issue
+        # self.gridMap[0:14, 4] = GridCellType.PARTIAL_EXPLORED.value
+        # self.gridMap[0:14, 5:10] = GridCellType.EXPLORED.value
+        # self.gridMap[0:14, 10] = GridCellType.PARTIAL_EXPLORED.value
 
         # Furthest target: ideal
         # self.gridMap[9:14, 0:6] = GridCellType.PARTIAL_EXPLORED.value
