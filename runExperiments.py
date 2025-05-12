@@ -1,11 +1,6 @@
 import csv
 from experiment import Experiment
 from environment import Environment
-import pandas as pd
-from scipy.stats import ttest_ind
-import matplotlib.pyplot as plt
-from itertools import combinations
-import random
 
 from constants.behaviourType import BehaviourType
 from constants.layoutType import LayoutType
@@ -57,6 +52,7 @@ def runExperimentsWithDifferentParameters():
                         environment=env,
                         noOfAgents=numOfAgent,
                         spawnPositions=spawnPositions,
+                        showHeatmap=True,
                     )
 
                     print(f"{layout.name}-{behaviour.name} {round}: {result}")
